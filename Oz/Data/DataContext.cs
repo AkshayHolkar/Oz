@@ -18,6 +18,6 @@ namespace Oz.Data
         public DbSet<Size> Sizes { get; set; }
         public DbSet<Colour> Colours { get; set; }
         public DbSet<ProductSize> ProductSizes { get; set; }
-
+        public DbSet<Image> Images { get; set; }
     }
 }

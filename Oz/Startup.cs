@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Oz.Installers;
 using Oz.Options;
@@ -35,13 +36,19 @@ namespace Oz
                 app.UseHsts();
             }
 
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider($"{env.ContentRootPath}/Images"),
+                RequestPath = "/Images"
+            });
+
             var swaggerOptions = new SwaggerOptions();
             Configuration.GetSection(nameof(SwaggerOptions)).Bind(swaggerOptions);
 
             app.UseSwagger(option =>
-            {
-                option.RouteTemplate = swaggerOptions.JsonRoute;
-            });
+                {
+                    option.RouteTemplate = swaggerOptions.JsonRoute;
+                });
 
             app.UseSwaggerUI(option =>
             {
