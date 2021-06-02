@@ -15,6 +15,8 @@ namespace Oz.Domain
         public string Description { get; set; }
         public bool Status { get; set; }
         public int CategoryId { get; set; }
+        public bool SizeNotApplicable { get; set; }
+        public bool ColorNotApplicable { get; set; }
 
         [ForeignKey(nameof(CategoryId))]
         public Category Category { get; set; }
