@@ -32,14 +32,14 @@ namespace Oz.Controllers.V1
         [HttpGet("{id}")]
         public async Task<ActionResult<Category>> GetCategory(int id)
         {
-            var Category = await _context.Categories.FindAsync(id);
+            var category = await _context.Categories.FindAsync(id);
 
-            if (Category == null)
+            if (category == null)
             {
                 return NotFound();
             }
 
-            return Category;
+            return category;
         }
 
         // PUT: api/v1/Categories/5
