@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/Products")]
     [ApiController]
     public class ProductsController : ControllerBase
     {
