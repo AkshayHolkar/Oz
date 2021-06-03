@@ -21,6 +21,7 @@ namespace Oz.Data
         public DbSet<Image> Images { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Account> Accounts { get; set; }
+        public DbSet<Cart> Carts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
