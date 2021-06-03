@@ -22,6 +22,7 @@ namespace Oz.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Cart> Carts { get; set; }
+        public DbSet<OrderStatus> OrderStatuses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
