@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
@@ -43,6 +45,7 @@ namespace Oz.Controllers.V1
         }
 
         // PUT: api/v1/Categories/5
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutCategory(int id, [FromBody] Category category)
         {
@@ -73,6 +76,7 @@ namespace Oz.Controllers.V1
         }
 
         // POST: api/v1/Categories
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Category>> PostCategory([FromBody] Category category)
         {
@@ -83,6 +87,7 @@ namespace Oz.Controllers.V1
         }
 
         // DELETE: api/v1/Categories/5
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult<Category>> DeleteCategory(int id)
         {

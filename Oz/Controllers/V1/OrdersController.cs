@@ -9,6 +9,7 @@ using Oz.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
+using Microsoft.AspNetCore.Identity;
 
 namespace Oz.Controllers.V1
 {
@@ -18,17 +19,22 @@ namespace Oz.Controllers.V1
     public class OrdersController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public OrdersController(DataContext context)
+        public OrdersController(DataContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: api/v1/Orders
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
-            return await _context.Orders.Where(i => i.CustomerId == HttpContext.GetUserId()).ToListAsync();
+            var userId = HttpContext.GetUserId();
+            if (await IsAdmin(userId))
+                return await _context.Orders.ToListAsync();
+            return await _context.Orders.Where(i => i.CustomerId == userId).ToListAsync();
 
         }
 
@@ -56,6 +62,7 @@ namespace Oz.Controllers.V1
         }
 
         // PUT: api/v1/Orders/5
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutOrder(int id, [FromBody] Order order)
         {
@@ -105,6 +112,7 @@ namespace Oz.Controllers.V1
         }
 
         // DELETE: api/v1/Orders/5
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult<Order>> DeleteOrder(int id)
         {
@@ -140,6 +148,20 @@ namespace Oz.Controllers.V1
             }
 
             return true;
+        }
+
+        private async Task<bool> IsAdmin(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            var roles = await _userManager.GetRolesAsync(user);
+
+            foreach (string role in roles)
+            {
+                if (role == "Admin")
+                    return true;
+            }
+
+            return false;
         }
     }
 }

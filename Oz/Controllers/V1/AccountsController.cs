@@ -33,6 +33,7 @@ namespace Oz.Controllers.V1
         }
 
         // GET: api/v1/Accounts/5
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult<Account>> GetAccount(string id)
         {
@@ -41,13 +42,6 @@ namespace Oz.Controllers.V1
             if (account == null)
             {
                 return NotFound();
-            }
-
-            var userOwnAccount = UserOwnsAccount(account, HttpContext.GetUserId());
-
-            if (!userOwnAccount)
-            {
-                return BadRequest(new { error = "You do not own this account" });
             }
 
             return account;
@@ -94,6 +88,12 @@ namespace Oz.Controllers.V1
         [HttpPost]
         public async Task<ActionResult<Account>> PostAccount([FromBody] Account account)
         {
+            var a = await _context.Accounts.FindAsync(HttpContext.GetUserId());
+            if (a != null)
+            {
+                return BadRequest(new { error = "This account exist" });
+            }
+
             account.UserId = HttpContext.GetUserId();
             account.User = null;
             _context.Accounts.Add(account);
@@ -104,7 +104,7 @@ namespace Oz.Controllers.V1
 
         // DELETE: api/v1/Accounts/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Account>> DeleteAccount(int id)
+        public async Task<ActionResult<Account>> DeleteAccount(string id)
         {
             var account = await _context.Accounts.FindAsync(id);
             if (account == null)

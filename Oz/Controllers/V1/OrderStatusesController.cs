@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
@@ -8,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/v1/OrderStatuses")]
     [ApiController]
     public class OrderStatusesController : ControllerBase
@@ -41,6 +44,7 @@ namespace Oz.Controllers.V1
         }
 
         // PUT: api/v1/OrderStatuses/5
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutOrderStatus(int id, [FromBody] OrderStatus orderStatus)
         {
@@ -71,6 +75,7 @@ namespace Oz.Controllers.V1
         }
 
         // POST: api/v1/OrderStatuses
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<OrderStatus>> PostOrderStatus([FromBody] OrderStatus orderStatus)
         {
@@ -81,6 +86,7 @@ namespace Oz.Controllers.V1
         }
 
         // DELETE: api/v1/OrderStatuses/5
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult<OrderStatus>> DeleteOrderStatus(int id)
         {

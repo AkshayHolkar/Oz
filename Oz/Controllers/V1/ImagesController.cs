@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -61,6 +63,7 @@ namespace Oz.Controllers.V1
         }
 
         // PUT: api/v1/Images/5
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutImage(int id, [FromBody] Image image)
         {
@@ -97,6 +100,7 @@ namespace Oz.Controllers.V1
         }
 
         // POST: api/v1/Images
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Image>> PostImage([FromBody] Image image)
         {
@@ -108,6 +112,7 @@ namespace Oz.Controllers.V1
         }
 
         // DELETE: api/v1/Images/5
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult<Image>> DeleteImage(int id)
         {

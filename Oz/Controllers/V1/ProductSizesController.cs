@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
@@ -41,6 +43,7 @@ namespace Oz.Controllers.V1
         }
 
         // PUT: api/v1/ProductSizes/5
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProductSize(int id, [FromBody] ProductSize productSize)
         {
@@ -71,6 +74,7 @@ namespace Oz.Controllers.V1
         }
 
         // POST: api/v1/ProductSizes
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<ProductSize>> PostProductSize([FromBody] ProductSize productSize)
         {
@@ -81,6 +85,7 @@ namespace Oz.Controllers.V1
         }
 
         // DELETE: api/v1/ProductSizes/5
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<ActionResult<ProductSize>> DeleteProductSize(int id)
         {
