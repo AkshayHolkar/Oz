@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Oz.Options;
+using Oz.Services;
 using System.Collections.Generic;
 using System.Text;
 
@@ -14,6 +15,8 @@ namespace Oz.Installers
         public void InstallServices(IServiceCollection services, IConfiguration configuration)
         {
             services.AddControllersWithViews();
+
+            services.AddScoped<IIdentityService, IdentityService>();
 
             services.AddSwaggerGen(x =>
             {
@@ -56,6 +59,8 @@ namespace Oz.Installers
                 RequireExpirationTime = false,
                 ValidateLifetime = true
             };
+
+            services.AddSingleton(tokenValidationParameters);
 
             services.AddAuthentication(x =>
             {

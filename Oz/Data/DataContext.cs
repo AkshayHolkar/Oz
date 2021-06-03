@@ -19,5 +19,6 @@ namespace Oz.Data
         public DbSet<Colour> Colours { get; set; }
         public DbSet<ProductSize> ProductSizes { get; set; }
         public DbSet<Image> Images { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
     }
 }
