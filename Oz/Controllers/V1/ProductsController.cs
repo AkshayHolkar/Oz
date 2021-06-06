@@ -25,7 +25,7 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Products
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetCategories()
+        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
             return await _context.Products.ToListAsync();
         }
