@@ -74,6 +74,7 @@ namespace Oz.Installers
                 x.TokenValidationParameters = tokenValidationParameters;
             });
 
+            services.AddCors();
         }
     }
 }
