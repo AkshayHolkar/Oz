@@ -23,8 +23,10 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Colours
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Colour>>> GetColours()
+        public async Task<ActionResult<IEnumerable<Colour>>> GetColours([FromQuery] int productId)
         {
+            if (productId != 0)
+                return await _context.Colours.Where(i => i.ProductId == productId).ToListAsync();
             return await _context.Colours.ToListAsync();
         }
 

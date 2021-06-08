@@ -29,8 +29,19 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Images
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Image>>> GetImages()
+        public async Task<ActionResult<IEnumerable<Image>>> GetImages([FromQuery] int productId)
         {
+            if (productId != 0)
+                return await _context.Images.Select(x => new Image()
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Main = x.Main,
+                    ProductId = x.ProductId,
+                    ImageScr = String.Format("{0}://{1}{2}/Images/{3}", Request.Scheme, Request.Host, Request.PathBase, x.Name)
+                })
+                .Where(i => i.ProductId == productId).ToListAsync();
+
             return await _context.Images.Select(x => new Image()
             {
                 Id = x.Id,
