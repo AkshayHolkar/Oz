@@ -23,8 +23,10 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/ProductSizes
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductSize>>> GetProductSizes()
+        public async Task<ActionResult<IEnumerable<ProductSize>>> GetProductSizes([FromQuery] int productId)
         {
+            if (productId != 0)
+                return await _context.ProductSizes.Where(i => i.ProductId == productId).ToListAsync();
             return await _context.ProductSizes.ToListAsync();
         }
 
