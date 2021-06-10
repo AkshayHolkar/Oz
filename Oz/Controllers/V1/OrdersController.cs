@@ -71,13 +71,6 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            var userOwnOrder = UserOwnsOrder(order, HttpContext.GetUserId());
-
-            if (!userOwnOrder)
-            {
-                return BadRequest(new { error = "You do not own this order" });
-            }
-
             _context.Entry(order).State = EntityState.Modified;
 
             try
