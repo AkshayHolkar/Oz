@@ -104,6 +104,7 @@ namespace Oz.Controllers.V1
         public async Task<ActionResult<Order>> PostOrder([FromBody] Order order)
         {
             order.CustomerId = HttpContext.GetUserId();
+            order.OrderStatus = "In Progress";
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
