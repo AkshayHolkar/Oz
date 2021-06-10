@@ -16,11 +16,11 @@ namespace Oz.Controllers.V1
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ApiController]
     [Route("api/v1/Carts")]
-    public class ActivitiesController : ControllerBase
+    public class CartsController : ControllerBase
     {
         private readonly DataContext _context;
 
-        public ActivitiesController(DataContext context)
+        public CartsController(DataContext context)
         {
             _context = context;
         }
@@ -105,7 +105,7 @@ namespace Oz.Controllers.V1
 
         // DELETE: api/v1/Carts/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Cart>> DeleteActivity(int id)
+        public async Task<ActionResult<Cart>> DeleteCart(int id)
         {
             var cart = await _context.Carts.FindAsync(id);
             if (cart == null)
