@@ -56,14 +56,14 @@ namespace Oz.Controllers.V1
         [HttpGet("{id}")]
         public async Task<ActionResult<Image>> GetImage(int id)
         {
-            var image = await _context.Images.Select(x => new Image()
+            var image = await _context.Images.Where(i => i.Main == true && i.ProductId == id).Select(x => new Image()
             {
                 Id = x.Id,
                 Name = x.Name,
                 Main = x.Main,
                 ProductId = x.ProductId,
                 ImageScr = String.Format("{0}://{1}{2}/Images/{3}", Request.Scheme, Request.Host, Request.PathBase, x.Name)
-            }).LastOrDefaultAsync(i => i.Id == id);
+            }).FirstOrDefaultAsync();
 
             if (image == null)
             {
@@ -113,9 +113,12 @@ namespace Oz.Controllers.V1
         // POST: api/v1/Images
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<Image>> PostImage([FromBody] Image image)
+        public async Task<ActionResult<Image>> PostImage(IFormCollection data, IFormFile imageFile)
         {
-            image.Name = await SaveImage(image.ImageFile);
+            Image image = new Image();
+            image.ProductId = Int32.Parse(data["productId"]);
+            image.Main = bool.Parse(data["main"]);
+            image.Name = await SaveImage(imageFile);
             _context.Images.Add(image);
             await _context.SaveChangesAsync();
 
