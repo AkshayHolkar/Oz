@@ -6,6 +6,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Oz.Installers;
 using Oz.Options;
+using System.IO;
 
 namespace Oz
 {
@@ -44,7 +45,7 @@ namespace Oz
 
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new PhysicalFileProvider($"{env.ContentRootPath}/Images"),
+                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"Images")),
                 RequestPath = "/Images"
             });
 
