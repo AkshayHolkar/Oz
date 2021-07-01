@@ -217,5 +217,11 @@ namespace Oz.Services
                     jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
                         StringComparison.InvariantCultureIgnoreCase);
         }
+
+        public async Task<IdentityResult> ApproveUserAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            return await _userManager.AddToRoleAsync(user, "Approved");
+        }
     }
 }

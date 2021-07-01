@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Oz.Authentication;
 using Oz.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Oz.Controllers
 {
@@ -64,6 +66,22 @@ namespace Oz.Controllers
                 Token = authResponse.Token,
                 RefreshToken = authResponse.RefreshToken
             });
+        }
+
+        //POST: api/Identity/Approve
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        [HttpPost("Approve")]
+        public async Task<ActionResult> Approve(string userId)
+        {
+            var result = await _identityService.ApproveUserAsync(userId);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new AuthFailResponse
+                {
+                    Errors = new[] { "User has approved already" }
+                });
+            }
+            return Ok();
         }
 
         // POST: api/Identity/Refresh
