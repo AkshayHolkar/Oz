@@ -28,7 +28,7 @@ namespace Oz.Controllers.V1
         // GET: api/v1/Accounts
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Account>>> GetAccount(bool withRoles)
+        public async Task<ActionResult<IEnumerable<Account>>> GetAccount(bool _)
         {
             return await _context.Accounts.ToListAsync();
         }
