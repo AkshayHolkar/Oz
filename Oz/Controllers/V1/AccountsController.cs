@@ -10,6 +10,7 @@ using Oz.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
+using Microsoft.AspNetCore.Identity;
 
 namespace Oz.Controllers.V1
 {
@@ -19,16 +20,18 @@ namespace Oz.Controllers.V1
     public class AccountsController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public AccountsController(DataContext context)
+        public AccountsController(DataContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
-        // GET: api/v1/Accounts
+        //GET: api/v1/Accounts/true
         [Authorize(Roles = "Admin")]
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Account>>> GetAccount(bool _)
+        [HttpGet("{_}/{unused}")]
+        public async Task<ActionResult<IEnumerable<Account>>> GetAccounts(bool _, bool unused)
         {
             return await _context.Accounts.ToListAsync();
         }
@@ -64,7 +67,7 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            var userOwnAccount = UserOwnsAccount(account, HttpContext.GetUserId());
+            var userOwnAccount = UserOwnsAccount(account, HttpContext.GetUserId()) || await IsAdmin(HttpContext.GetUserId());
 
             if (!userOwnAccount)
             {
@@ -146,6 +149,12 @@ namespace Oz.Controllers.V1
             }
 
             return true;
+        }
+
+        private async Task<bool> IsAdmin(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            return await _userManager.IsInRoleAsync(user, "Admin");
         }
     }
 }
