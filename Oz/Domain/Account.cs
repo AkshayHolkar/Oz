@@ -20,6 +20,7 @@ namespace Oz.Domain
         public string State { get; set; }
         public int Postcode { get; set; }
         public string Country { get; set; }
+        public bool Approved { get; set; } = false;
         public ApplicationUser User { get; set; }
     }
 }
