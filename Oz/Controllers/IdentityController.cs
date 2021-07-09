@@ -71,7 +71,7 @@ namespace Oz.Controllers
         //POST: api/Identity/Approve
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost("Approve")]
-        public async Task<ActionResult> Approve(string userId)
+        public async Task<ActionResult> Approve([FromForm] string userId)
         {
             var result = await _identityService.ApproveUserAsync(userId);
             if (!result.Succeeded)
