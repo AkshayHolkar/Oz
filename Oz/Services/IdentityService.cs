@@ -223,5 +223,11 @@ namespace Oz.Services
             var user = await _userManager.FindByIdAsync(userId);
             return await _userManager.AddToRoleAsync(user, "Approved");
         }
+
+        public async Task<bool> IsAdminAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            return await _userManager.IsInRoleAsync(user, "Admin");
+        }
     }
 }
