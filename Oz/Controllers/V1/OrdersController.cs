@@ -96,7 +96,9 @@ namespace Oz.Controllers.V1
         [HttpPost]
         public async Task<ActionResult<Order>> PostOrder([FromBody] Order order)
         {
-            order.CustomerId = HttpContext.GetUserId();
+            var userId = HttpContext.GetUserId();
+            if (!await IsAdmin(userId))
+                order.CustomerId = userId;
             order.OrderStatus = "In Progress";
 
             _context.Orders.Add(order);
