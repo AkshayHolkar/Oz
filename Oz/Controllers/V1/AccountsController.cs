@@ -10,7 +10,7 @@ using Oz.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
-using Microsoft.AspNetCore.Identity;
+using Oz.Services;
 
 namespace Oz.Controllers.V1
 {
@@ -20,12 +20,12 @@ namespace Oz.Controllers.V1
     public class AccountsController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IIdentityService _identityService;
 
-        public AccountsController(DataContext context, UserManager<IdentityUser> userManager)
+        public AccountsController(DataContext context, IIdentityService identityService)
         {
             _context = context;
-            _userManager = userManager;
+            _identityService = identityService;
         }
 
         //GET: api/v1/Accounts/true
@@ -66,8 +66,8 @@ namespace Oz.Controllers.V1
             {
                 return BadRequest();
             }
-
-            var userOwnAccount = UserOwnsAccount(account, HttpContext.GetUserId()) || await IsAdmin(HttpContext.GetUserId());
+            var userId = HttpContext.GetUserId();
+            var userOwnAccount = UserOwnsAccount(account, userId) || await _identityService.IsAdminAsync(userId);
 
             if (!userOwnAccount)
             {
@@ -149,12 +149,6 @@ namespace Oz.Controllers.V1
             }
 
             return true;
-        }
-
-        private async Task<bool> IsAdmin(string userId)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-            return await _userManager.IsInRoleAsync(user, "Admin");
         }
     }
 }

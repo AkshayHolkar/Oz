@@ -9,7 +9,7 @@ using Oz.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
-using Microsoft.AspNetCore.Identity;
+using Oz.Services;
 
 namespace Oz.Controllers.V1
 {
@@ -19,12 +19,12 @@ namespace Oz.Controllers.V1
     public class OrdersController : ControllerBase
     {
         private readonly DataContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IIdentityService _identityService;
 
-        public OrdersController(DataContext context, UserManager<IdentityUser> userManager)
+        public OrdersController(DataContext context, IIdentityService identityService)
         {
             _context = context;
-            _userManager = userManager;
+            _identityService = identityService;
         }
 
         // GET: api/v1/Orders
@@ -32,7 +32,7 @@ namespace Oz.Controllers.V1
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
             var userId = HttpContext.GetUserId();
-            if (await IsAdmin(userId))
+            if (await _identityService.IsAdminAsync(userId))
                 return await _context.Orders.ToListAsync();
             return await _context.Orders.Where(i => i.CustomerId == userId).ToListAsync();
 
@@ -97,7 +97,7 @@ namespace Oz.Controllers.V1
         public async Task<ActionResult<Order>> PostOrder([FromBody] Order order)
         {
             var userId = HttpContext.GetUserId();
-            if (!await IsAdmin(userId))
+            if (!await _identityService.IsAdminAsync(userId))
                 order.CustomerId = userId;
             order.OrderStatus = "In Progress";
 
@@ -144,20 +144,6 @@ namespace Oz.Controllers.V1
             }
 
             return true;
-        }
-
-        private async Task<bool> IsAdmin(string userId)
-        {
-            var user = await _userManager.FindByIdAsync(userId);
-            var roles = await _userManager.GetRolesAsync(user);
-
-            foreach (string role in roles)
-            {
-                if (role == "Admin")
-                    return true;
-            }
-
-            return false;
         }
     }
 }
