@@ -29,11 +29,15 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Orders
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
+        public async Task<ActionResult<IEnumerable<Order>>> GetOrders([FromQuery] string customerId)
         {
             var userId = HttpContext.GetUserId();
-            if (await _identityService.IsAdminAsync(userId))
+            if (await _identityService.IsAdminAsync(userId) && string.IsNullOrEmpty(customerId))
                 return await _context.Orders.ToListAsync();
+
+            if (await _identityService.IsAdminAsync(userId) && !string.IsNullOrEmpty(customerId))
+                return await _context.Orders.Where(i => i.CustomerId == customerId).ToListAsync();
+
             return await _context.Orders.Where(i => i.CustomerId == userId).ToListAsync();
 
         }
