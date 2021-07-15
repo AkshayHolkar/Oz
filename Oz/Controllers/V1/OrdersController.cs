@@ -33,12 +33,12 @@ namespace Oz.Controllers.V1
         {
             var userId = HttpContext.GetUserId();
             if (await _identityService.IsAdminAsync(userId) && string.IsNullOrEmpty(customerId))
-                return await _context.Orders.ToListAsync();
+                return await _context.Orders.OrderByDescending(j => j.Id).ToListAsync();
 
             if (await _identityService.IsAdminAsync(userId) && !string.IsNullOrEmpty(customerId))
-                return await _context.Orders.Where(i => i.CustomerId == customerId).ToListAsync();
+                return await _context.Orders.Where(i => i.CustomerId == customerId).OrderByDescending(j => j.Id).ToListAsync();
 
-            return await _context.Orders.Where(i => i.CustomerId == userId).ToListAsync();
+            return await _context.Orders.Where(i => i.CustomerId == userId).OrderByDescending(j => j.Id).ToListAsync();
 
         }
 
