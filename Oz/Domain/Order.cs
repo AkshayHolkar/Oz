@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Oz.Domain
 {
-    public class Order
+    public class Order : IAuthorization
     {
         public int Id { get; set; }
         public DateTime DateCreation { get; set; }
