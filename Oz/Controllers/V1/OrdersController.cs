@@ -20,11 +20,13 @@ namespace Oz.Controllers.V1
     {
         private readonly DataContext _context;
         private readonly IIdentityService _identityService;
+        private readonly ISharedService _sharedService;
 
-        public OrdersController(DataContext context, IIdentityService identityService)
+        public OrdersController(DataContext context, IIdentityService identityService, ISharedService sharedService)
         {
             _context = context;
             _identityService = identityService;
+            _sharedService = sharedService;
         }
 
         // GET: api/v1/Orders
@@ -55,9 +57,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            var userOwnOrder = UserOwnsOrder(order, HttpContext.GetUserId());
-
-            if (!userOwnOrder)
+            if (!_sharedService.UserOwnsDomain(order, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this order" });
             }
@@ -122,13 +122,6 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            var userOwnOrder = UserOwnsOrder(order, HttpContext.GetUserId());
-
-            if (!userOwnOrder)
-            {
-                return BadRequest(new { error = "You do not own this order" });
-            }
-
             _context.Orders.Remove(order);
             await _context.SaveChangesAsync();
 
@@ -138,16 +131,6 @@ namespace Oz.Controllers.V1
         private bool OrderExists(int id)
         {
             return _context.Orders.Any(e => e.Id == id);
-        }
-
-        private bool UserOwnsOrder(Order order, string userId)
-        {
-            if (order.CustomerId != userId)
-            {
-                return false;
-            }
-
-            return true;
         }
     }
 }

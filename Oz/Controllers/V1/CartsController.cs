@@ -10,6 +10,7 @@ using Oz.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
+using Oz.Services;
 
 namespace Oz.Controllers.V1
 {
@@ -19,10 +20,12 @@ namespace Oz.Controllers.V1
     public class CartsController : ControllerBase
     {
         private readonly DataContext _context;
+        private readonly ISharedService _sharedService;
 
-        public CartsController(DataContext context)
+        public CartsController(DataContext context, ISharedService sharedService)
         {
             _context = context;
+            _sharedService = sharedService;
         }
 
         // GET: api/v1/Carts
@@ -44,9 +47,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            var userOwnCart = UserOwnsCart(cart, HttpContext.GetUserId());
-
-            if (!userOwnCart)
+            if (!_sharedService.UserOwnsDomain(cart, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this cart" });
             }
@@ -63,9 +64,7 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            var userOwnCart = UserOwnsCart(cart, HttpContext.GetUserId());
-
-            if (!userOwnCart)
+            if (!_sharedService.UserOwnsDomain(cart, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this cart" });
             }
@@ -113,9 +112,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            var userOwnCart = UserOwnsCart(cart, HttpContext.GetUserId());
-
-            if (!userOwnCart)
+            if (!_sharedService.UserOwnsDomain(cart, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this cart" });
             }
@@ -129,16 +126,6 @@ namespace Oz.Controllers.V1
         private bool CartExists(int id)
         {
             return _context.Carts.Any(e => e.Id == id);
-        }
-
-        private bool UserOwnsCart(Cart cart, string userId)
-        {
-            if (cart.CustomerId != userId)
-            {
-                return false;
-            }
-
-            return true;
         }
     }
 }

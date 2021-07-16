@@ -17,6 +17,7 @@ namespace Oz.Installers
             services.AddControllersWithViews();
 
             services.AddScoped<IIdentityService, IdentityService>();
+            services.AddScoped<ISharedService, SharedService>();
 
             services.AddSwaggerGen(x =>
             {
