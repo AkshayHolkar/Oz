@@ -83,12 +83,6 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            if (image.Name != null)
-            {
-                DeleteImage(image.Name);
-                image.Name = await SaveImage(image.ImageFile);
-            }
-
             _context.Entry(image).State = EntityState.Modified;
 
             try
