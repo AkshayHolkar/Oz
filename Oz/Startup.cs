@@ -43,11 +43,7 @@ namespace Oz
                 app.UseHsts();
             }
 
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), @"Images")),
-                RequestPath = "/Images"
-            });
+            app.UseStaticFiles();
 
             var swaggerOptions = new SwaggerOptions();
             Configuration.GetSection(nameof(SwaggerOptions)).Bind(swaggerOptions);
