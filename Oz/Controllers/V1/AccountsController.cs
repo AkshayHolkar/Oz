@@ -22,11 +22,13 @@ namespace Oz.Controllers.V1
     {
         private readonly DataContext _context;
         private readonly IIdentityService _identityService;
+        private readonly ISharedService _sharedService;
 
-        public AccountsController(DataContext context, IIdentityService identityService)
+        public AccountsController(DataContext context, IIdentityService identityService, ISharedService sharedService)
         {
             _context = context;
             _identityService = identityService;
+            _sharedService = sharedService;
         }
 
         //GET: api/v1/Accounts/true
@@ -75,7 +77,7 @@ namespace Oz.Controllers.V1
 
             var account = accountDto.AsAccountFromAccountDto();
             var userId = HttpContext.GetUserId();
-            var userOwnAccount = UserOwnsAccount(account, userId) || await _identityService.IsAdminAsync(userId);
+            var userOwnAccount = _sharedService.UserOwnsDomain(account.UserId, userId) || await _identityService.IsAdminAsync(userId);
 
             if (!userOwnAccount)
             {
@@ -132,7 +134,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            var userOwnAccount = UserOwnsAccount(account, HttpContext.GetUserId());
+            var userOwnAccount = _sharedService.UserOwnsDomain(account.UserId, HttpContext.GetUserId());
 
             if (!userOwnAccount)
             {
@@ -148,16 +150,6 @@ namespace Oz.Controllers.V1
         private bool AccountExists(string id)
         {
             return _context.Accounts.Any(e => e.UserId == id);
-        }
-
-        private bool UserOwnsAccount(Account account, string userId)
-        {
-            if (account.UserId != userId)
-            {
-                return false;
-            }
-
-            return true;
         }
     }
 }
