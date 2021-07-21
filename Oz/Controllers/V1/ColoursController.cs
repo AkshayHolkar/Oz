@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
+using Oz.Extensions;
+using Oz.Dtos;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,16 +25,16 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Colours
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Colour>>> GetColours([FromQuery] int productId)
+        public async Task<ActionResult<IEnumerable<ColourDto>>> GetColours([FromQuery] int productId)
         {
             if (productId != 0)
-                return await _context.Colours.Where(i => i.ProductId == productId).ToListAsync();
-            return await _context.Colours.ToListAsync();
+                return await _context.Colours.Where(i => i.ProductId == productId).Select(colour => colour.AsDto()).ToListAsync();
+            return await _context.Colours.Select(colour => colour.AsDto()).ToListAsync();
         }
 
         // GET: api/v1/Colours/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Colour>> GetColour(int id)
+        public async Task<ActionResult<ColourDto>> GetColour(int id)
         {
             var colour = await _context.Colours.FindAsync(id);
 
@@ -41,20 +43,20 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            return colour;
+            return colour.AsDto();
         }
 
         // PUT: api/v1/Colours/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutColour(int id, [FromBody] Colour colour)
+        public async Task<IActionResult> PutColour(int id, [FromBody] ColourDto colourDto)
         {
-            if (id != colour.Id)
+            if (id != colourDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(colour).State = EntityState.Modified;
+            _context.Entry(colourDto.AsColourFromColourDto()).State = EntityState.Modified;
 
             try
             {
@@ -78,18 +80,19 @@ namespace Oz.Controllers.V1
         // POST: api/v1/Colours
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<Colour>> PostColour([FromBody] Colour colour)
+        public async Task<ActionResult<ColourDto>> PostColour([FromBody] PostColourDto postColourDto)
         {
+            var colour = postColourDto.AsCartFromPostColourDto();
             _context.Colours.Add(colour);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetColour), new { id = colour.Id }, colour);
+            return CreatedAtAction(nameof(GetColour), new { id = colour.Id }, colour.AsDto());
         }
 
         // DELETE: api/v1/Colours/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Colour>> DeleteColour(int id)
+        public async Task<IActionResult> DeleteColour(int id)
         {
             var colour = await _context.Colours.FindAsync(id);
             if (colour == null)
@@ -100,7 +103,7 @@ namespace Oz.Controllers.V1
             _context.Colours.Remove(colour);
             await _context.SaveChangesAsync();
 
-            return colour;
+            return NoContent();
         }
 
         private bool ColourExists(int id)
