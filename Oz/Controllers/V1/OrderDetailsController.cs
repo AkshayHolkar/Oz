@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
-using Oz.Domain;
+using Oz.Dtos;
+using Oz.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,11 +25,11 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/OrderDetails
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderDetail>>> GetOrderDetails([FromQuery] int orderId)
+        public async Task<ActionResult<IEnumerable<OrderDetailDto>>> GetOrderDetails([FromQuery] int orderId)
         {
             if (orderId != 0)
             {
-                return await _context.OrderDetails.Where(i => i.OrderId == orderId).ToListAsync();
+                return await _context.OrderDetails.Where(i => i.OrderId == orderId).Select(orderDetail => orderDetail.AsDto()).ToListAsync();
             }
 
             return NotFound();
@@ -36,7 +37,7 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/OrderDetails/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<OrderDetail>> GetOrderDetail(int id)
+        public async Task<ActionResult<OrderDetailDto>> GetOrderDetail(int id)
         {
             var orderDetail = await _context.OrderDetails.FindAsync(id);
 
@@ -45,20 +46,20 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            return orderDetail;
+            return orderDetail.AsDto();
         }
 
         // PUT: api/v1/OrderDetails/5
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutOrderDetail(int id, [FromBody] OrderDetail orderDetail)
+        public async Task<IActionResult> PutOrderDetail(int id, [FromBody] OrderDetailDto orderDetailDto)
         {
-            if (id != orderDetail.Id)
+            if (id != orderDetailDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(orderDetail).State = EntityState.Modified;
+            _context.Entry(orderDetailDto.AsOrderFromOrderDetailDto()).State = EntityState.Modified;
 
             try
             {
@@ -81,18 +82,19 @@ namespace Oz.Controllers.V1
 
         // POST: api/v1/OrderDetails
         [HttpPost]
-        public async Task<ActionResult<OrderDetail>> PostOrderDetail([FromBody] OrderDetail orderDetail)
+        public async Task<ActionResult<OrderDetailDto>> PostOrderDetail([FromBody] PostOrderDetailDto postOrderDetailDto)
         {
+            var orderDetail = postOrderDetailDto.AsOrderFromPostOrderDetailDto();
             _context.OrderDetails.Add(orderDetail);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetOrderDetail), new { id = orderDetail.Id }, orderDetail);
+            return CreatedAtAction(nameof(GetOrderDetail), new { id = orderDetail.Id }, orderDetail.AsDto());
         }
 
         // DELETE: api/v1/OrderDetails/5
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult<OrderDetail>> DeleteOrderDetail(int id)
+        public async Task<IActionResult> DeleteOrderDetail(int id)
         {
             var orderDetail = await _context.OrderDetails.FindAsync(id);
             if (orderDetail == null)
@@ -103,7 +105,7 @@ namespace Oz.Controllers.V1
             _context.OrderDetails.Remove(orderDetail);
             await _context.SaveChangesAsync();
 
-            return orderDetail;
+            return NoContent();
         }
 
         private bool OrderDetailExists(int id)
