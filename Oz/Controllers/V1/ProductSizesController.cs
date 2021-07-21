@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
-using Oz.Domain;
+using Oz.Dtos;
+using Oz.Extensions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,16 +24,16 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/ProductSizes
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductSize>>> GetProductSizes([FromQuery] int productId)
+        public async Task<ActionResult<IEnumerable<ProductSizeDto>>> GetProductSizes([FromQuery] int productId)
         {
             if (productId != 0)
-                return await _context.ProductSizes.Where(i => i.ProductId == productId).ToListAsync();
-            return await _context.ProductSizes.ToListAsync();
+                return await _context.ProductSizes.Where(i => i.ProductId == productId).Select(product => product.AsDto()).ToListAsync();
+            return await _context.ProductSizes.Select(product => product.AsDto()).ToListAsync();
         }
 
         // GET: api/v1/ProductSizes/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ProductSize>> GetProductSize(int id)
+        public async Task<ActionResult<ProductSizeDto>> GetProductSize(int id)
         {
             var productSize = await _context.ProductSizes.FindAsync(id);
 
@@ -41,20 +42,20 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            return productSize;
+            return productSize.AsDto();
         }
 
         // PUT: api/v1/ProductSizes/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProductSize(int id, [FromBody] ProductSize productSize)
+        public async Task<IActionResult> PutProductSize(int id, [FromBody] ProductSizeDto productSizeDto)
         {
-            if (id != productSize.Id)
+            if (id != productSizeDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(productSize).State = EntityState.Modified;
+            _context.Entry(productSizeDto.AsProductSizeFromProductSizeDto()).State = EntityState.Modified;
 
             try
             {
@@ -78,18 +79,19 @@ namespace Oz.Controllers.V1
         // POST: api/v1/ProductSizes
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<ProductSize>> PostProductSize([FromBody] ProductSize productSize)
+        public async Task<ActionResult<ProductSizeDto>> PostProductSize([FromBody] PostProductSizeDto postProductSizeDto)
         {
+            var productSize = postProductSizeDto.AsProductSizeFromPostProductSizeDto();
             _context.ProductSizes.Add(productSize);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProductSize), new { id = productSize.Id }, productSize);
+            return CreatedAtAction(nameof(GetProductSize), new { id = productSize.Id }, productSize.AsDto());
         }
 
         // DELETE: api/v1/ProductSizes/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult<ProductSize>> DeleteProductSize(int id)
+        public async Task<IActionResult> DeleteProductSize(int id)
         {
             var productSize = await _context.ProductSizes.FindAsync(id);
             if (productSize == null)
@@ -100,7 +102,7 @@ namespace Oz.Controllers.V1
             _context.ProductSizes.Remove(productSize);
             await _context.SaveChangesAsync();
 
-            return productSize;
+            return NoContent();
         }
 
         private bool ProductSizeExists(int id)
