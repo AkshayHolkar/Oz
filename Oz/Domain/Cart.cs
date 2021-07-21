@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Oz.Domain
 {
-    public class Cart : IAuthorization
+    public class Cart
     {
         public int Id { get; set; }
         public string CustomerId { get; set; }
