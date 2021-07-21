@@ -58,7 +58,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            if (!_sharedService.UserOwnsDomain(order, HttpContext.GetUserId()))
+            if (!_sharedService.UserOwnsDomain(order.CustomerId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this order" });
             }

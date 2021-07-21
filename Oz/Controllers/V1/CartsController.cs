@@ -48,7 +48,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            if (!_sharedService.UserOwnsDomain(cart, HttpContext.GetUserId()))
+            if (!_sharedService.UserOwnsDomain(cart.CustomerId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this cart" });
             }
@@ -65,7 +65,7 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            if (!_sharedService.UserOwnsDomain(cartDto.AsCartFromCartDto(), HttpContext.GetUserId()))
+            if (!_sharedService.UserOwnsDomain(cartDto.CustomerId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this cart" });
             }
@@ -114,7 +114,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            if (!_sharedService.UserOwnsDomain(cart, HttpContext.GetUserId()))
+            if (!_sharedService.UserOwnsDomain(cart.CustomerId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this cart" });
             }
