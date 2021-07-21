@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
 using Oz.Services;
+using Oz.Dtos;
 
 namespace Oz.Controllers.V1
 {
@@ -31,22 +32,22 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Orders
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetOrders([FromQuery] string customerId)
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders([FromQuery] string customerId)
         {
             var userId = HttpContext.GetUserId();
             if (await _identityService.IsAdminAsync(userId) && string.IsNullOrEmpty(customerId))
-                return await _context.Orders.OrderByDescending(j => j.Id).ToListAsync();
+                return await _context.Orders.OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
 
             if (await _identityService.IsAdminAsync(userId) && !string.IsNullOrEmpty(customerId))
-                return await _context.Orders.Where(i => i.CustomerId == customerId).OrderByDescending(j => j.Id).ToListAsync();
+                return await _context.Orders.Where(i => i.CustomerId == customerId).OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
 
-            return await _context.Orders.Where(i => i.CustomerId == userId).OrderByDescending(j => j.Id).ToListAsync();
+            return await _context.Orders.Where(i => i.CustomerId == userId).OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
 
         }
 
         // GET: api/v1/Orders/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Order>> GetOrder(int id)
+        public async Task<ActionResult<SingleOrderDto>> GetOrder(int id)
         {
             var order = await _context.Orders
                  .Include(i => i.OrderDetails)
@@ -62,20 +63,20 @@ namespace Oz.Controllers.V1
                 return BadRequest(new { error = "You do not own this order" });
             }
 
-            return order;
+            return order.AsSingleOrderDto();
         }
 
         // PUT: api/v1/Orders/5
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutOrder(int id, [FromBody] Order order)
+        public async Task<IActionResult> PutOrder(int id, [FromBody] OrderDto orderDto)
         {
-            if (id != order.Id)
+            if (id != orderDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(order).State = EntityState.Modified;
+            _context.Entry(orderDto.AsOrderFromOrderDto()).State = EntityState.Modified;
 
             try
             {
@@ -98,8 +99,9 @@ namespace Oz.Controllers.V1
 
         // POST: api/v1/Orders
         [HttpPost]
-        public async Task<ActionResult<Order>> PostOrder([FromBody] Order order)
+        public async Task<ActionResult<OrderDto>> PostOrder([FromBody] PostOrderDto postOrderDto)
         {
+            var order = postOrderDto.AsOrderFromPostOrderDto();
             var userId = HttpContext.GetUserId();
             if (!await _identityService.IsAdminAsync(userId))
                 order.CustomerId = userId;
@@ -108,13 +110,13 @@ namespace Oz.Controllers.V1
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
+            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order.AsDto());
         }
 
         // DELETE: api/v1/Orders/5
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Order>> DeleteOrder(int id)
+        public async Task<IActionResult> DeleteOrder(int id)
         {
             var order = await _context.Orders.FindAsync(id);
             if (order == null)
@@ -125,7 +127,7 @@ namespace Oz.Controllers.V1
             _context.Orders.Remove(order);
             await _context.SaveChangesAsync();
 
-            return order;
+            return NoContent();
         }
 
         private bool OrderExists(int id)
