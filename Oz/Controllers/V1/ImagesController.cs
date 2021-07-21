@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
+using Oz.Dtos;
+using Oz.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,10 +31,10 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Images
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Image>>> GetImages([FromQuery] int productId)
+        public async Task<ActionResult<IEnumerable<ImageDto>>> GetImages([FromQuery] int productId)
         {
             if (productId != 0)
-                return await _context.Images.Select(x => new Image()
+                return await _context.Images.Select(x => new ImageDto()
                 {
                     Id = x.Id,
                     Name = x.Name,
@@ -42,7 +44,7 @@ namespace Oz.Controllers.V1
                 })
                 .Where(i => i.ProductId == productId).ToListAsync();
 
-            return await _context.Images.Select(x => new Image()
+            return await _context.Images.Select(x => new ImageDto()
             {
                 Id = x.Id,
                 Name = x.Name,
@@ -54,9 +56,9 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Images/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Image>> GetImage(int id)
+        public async Task<ActionResult<ImageDto>> GetImage(int id)
         {
-            var image = await _context.Images.Where(i => i.Main == true && i.ProductId == id).Select(x => new Image()
+            var image = await _context.Images.Where(i => i.Main == true && i.ProductId == id).Select(x => new ImageDto()
             {
                 Id = x.Id,
                 Name = x.Name,
@@ -76,14 +78,14 @@ namespace Oz.Controllers.V1
         // PUT: api/v1/Images/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutImage(int id, [FromBody] Image image)
+        public async Task<IActionResult> PutImage(int id, [FromBody] PutImageDto putImageDto)
         {
-            if (id != image.Id)
+            if (id != putImageDto.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(image).State = EntityState.Modified;
+            _context.Entry(putImageDto.AsImageFromPutImageDto()).State = EntityState.Modified;
 
             try
             {
@@ -107,7 +109,7 @@ namespace Oz.Controllers.V1
         // POST: api/v1/Images
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<Image>> PostImage(IFormCollection data, IFormFile imageFile)
+        public async Task<ActionResult<ImageDto>> PostImage(IFormCollection data, IFormFile imageFile)
         {
             Image image = new Image();
             image.ProductId = Int32.Parse(data["productId"]);
@@ -116,13 +118,13 @@ namespace Oz.Controllers.V1
             _context.Images.Add(image);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetImage), new { id = image.Id }, image);
+            return CreatedAtAction(nameof(GetImage), new { id = image.Id }, image.AsDto());
         }
 
         // DELETE: api/v1/Images/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Image>> DeleteImage(int id)
+        public async Task<IActionResult> DeleteImage(int id)
         {
             var image = await _context.Images.FindAsync(id);
             if (image == null)
@@ -134,7 +136,7 @@ namespace Oz.Controllers.V1
             _context.Images.Remove(image);
             await _context.SaveChangesAsync();
 
-            return image;
+            return NoContent();
         }
 
         private bool ImageExists(int id)
