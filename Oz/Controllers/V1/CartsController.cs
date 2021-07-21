@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
 using Oz.Services;
+using Oz.Dtos;
 
 namespace Oz.Controllers.V1
 {
@@ -30,15 +31,15 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Carts
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Cart>>> GetCarts()
+        public async Task<ActionResult<IEnumerable<CartDto>>> GetCarts()
         {
-            return await _context.Carts.Where(i => i.CustomerId == HttpContext.GetUserId()).ToListAsync();
+            return await _context.Carts.Where(i => i.CustomerId == HttpContext.GetUserId()).Select(cart => cart.AsDto()).ToListAsync();
 
         }
 
         // GET: api/v1/Carts/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Cart>> GetCart(int id)
+        public async Task<ActionResult<CartDto>> GetCart(int id)
         {
             var cart = await _context.Carts.FindAsync(id);
 
@@ -52,24 +53,24 @@ namespace Oz.Controllers.V1
                 return BadRequest(new { error = "You do not own this cart" });
             }
 
-            return cart;
+            return cart.AsDto();
         }
 
         // PUT: api/v1/Carts/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCart(int id, [FromBody] Cart cart)
+        public async Task<IActionResult> PutCart(int id, [FromBody] CartDto cartDto)
         {
-            if (id != cart.Id)
+            if (id != cartDto.Id)
             {
                 return BadRequest();
             }
 
-            if (!_sharedService.UserOwnsDomain(cart, HttpContext.GetUserId()))
+            if (!_sharedService.UserOwnsDomain(cartDto.AsCartFromCartDto(), HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this cart" });
             }
 
-            _context.Entry(cart).State = EntityState.Modified;
+            _context.Entry(cartDto.AsCartFromCartDto()).State = EntityState.Modified;
 
             try
             {
@@ -92,19 +93,20 @@ namespace Oz.Controllers.V1
 
         // POST: api/v1/Carts
         [HttpPost]
-        public async Task<ActionResult<Cart>> PostCart([FromBody] Cart cart)
+        public async Task<ActionResult<CartDto>> PostCart([FromBody] CreateCartDto createCartDto)
         {
+            var cart = createCartDto.AsCartFromCreateCartDto();
             cart.CustomerId = HttpContext.GetUserId();
 
             _context.Carts.Add(cart);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCart), new { id = cart.Id }, cart);
+            return CreatedAtAction(nameof(GetCart), new { id = cart.Id }, cart.AsDto());
         }
 
         // DELETE: api/v1/Carts/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Cart>> DeleteCart(int id)
+        public async Task<IActionResult> DeleteCart(int id)
         {
             var cart = await _context.Carts.FindAsync(id);
             if (cart == null)
@@ -120,7 +122,7 @@ namespace Oz.Controllers.V1
             _context.Carts.Remove(cart);
             await _context.SaveChangesAsync();
 
-            return cart;
+            return NoContent();
         }
 
         private bool CartExists(int id)
