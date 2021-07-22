@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
+using Oz.Repositories;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,25 +16,25 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class OrderStatusesController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IDomainsRepository<OrderStatus> _repository;
 
-        public OrderStatusesController(DataContext context)
+        public OrderStatusesController(IDomainsRepository<OrderStatus> repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         // GET: api/v1/OrderStatuses
         [HttpGet]
         public async Task<ActionResult<IEnumerable<OrderStatus>>> GetOrderStatuses()
         {
-            return await _context.OrderStatuses.ToListAsync();
+            return await _repository.GetAllAsync();
         }
 
         // GET: api/v1/OrderStatuses/5
         [HttpGet("{id}")]
         public async Task<ActionResult<OrderStatus>> GetOrderStatus(int id)
         {
-            var orderStatus = await _context.OrderStatuses.FindAsync(id);
+            var orderStatus = await _repository.GetByIdAsync(id);
 
             if (orderStatus == null)
             {
@@ -53,23 +54,17 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            _context.Entry(orderStatus).State = EntityState.Modified;
+            if (!_repository.isExist(id))
+            {
+                return NotFound();
+            }
 
-            try
+            if (!ModelState.IsValid)
             {
-                await _context.SaveChangesAsync();
+                return BadRequest(ModelState.ErrorCount);
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!OrderStatusExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            await _repository.UpdateAsync(orderStatus);
 
             return NoContent();
         }
@@ -79,8 +74,12 @@ namespace Oz.Controllers.V1
         [HttpPost]
         public async Task<ActionResult<OrderStatus>> PostOrderStatus([FromBody] OrderStatus orderStatus)
         {
-            _context.OrderStatuses.Add(orderStatus);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.ErrorCount);
+            }
+
+            orderStatus = await _repository.CreateAsync(orderStatus);
 
             return CreatedAtAction(nameof(GetOrderStatus), new { id = orderStatus.Id }, orderStatus);
         }
@@ -90,21 +89,14 @@ namespace Oz.Controllers.V1
         [HttpDelete("{id}")]
         public async Task<ActionResult<OrderStatus>> DeleteOrderStatus(int id)
         {
-            var orderStatus = await _context.OrderStatuses.FindAsync(id);
-            if (orderStatus == null)
+            if (!_repository.isExist(id))
             {
                 return NotFound();
             }
 
-            _context.OrderStatuses.Remove(orderStatus);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(id);
 
-            return orderStatus;
-        }
-
-        private bool OrderStatusExists(int id)
-        {
-            return _context.OrderStatuses.Any(e => e.Id == id);
+            return NoContent();
         }
     }
 }
