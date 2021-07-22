@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
+using Oz.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,25 +17,25 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IDomainsRepository<Category> _repository;
 
-        public CategoriesController(DataContext context)
+        public CategoriesController(IDomainsRepository<Category> repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         // GET: api/v1/Categories
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
         {
-            return await _context.Categories.ToListAsync();
+            return await _repository.GetAllAsync();
         }
 
         // GET: api/v1/Categories/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Category>> GetCategory(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _repository.GetByIdAsync(id);
 
             if (category == null)
             {
@@ -54,23 +55,17 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            _context.Entry(category).State = EntityState.Modified;
+            if (!_repository.isExist(id))
+            {
+                return NotFound();
+            }
 
-            try
+            if (!ModelState.IsValid)
             {
-                await _context.SaveChangesAsync();
+                return BadRequest(ModelState.ErrorCount);
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CategoryExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            await _repository.UpdateAsync(category);
 
             return NoContent();
         }
@@ -80,8 +75,12 @@ namespace Oz.Controllers.V1
         [HttpPost]
         public async Task<ActionResult<Category>> PostCategory([FromBody] Category category)
         {
-            _context.Categories.Add(category);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.ErrorCount);
+            }
+
+            category = await _repository.CreateAsync(category);
 
             return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category);
         }
@@ -91,21 +90,14 @@ namespace Oz.Controllers.V1
         [HttpDelete("{id}")]
         public async Task<ActionResult<Category>> DeleteCategory(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
-            if (category == null)
+            if (!_repository.isExist(id))
             {
                 return NotFound();
             }
 
-            _context.Categories.Remove(category);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(id);
 
-            return category;
-        }
-
-        private bool CategoryExists(int id)
-        {
-            return _context.Categories.Any(e => e.Id == id);
+            return NoContent();
         }
     }
 }
