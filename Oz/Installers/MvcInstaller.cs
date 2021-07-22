@@ -24,6 +24,7 @@ namespace Oz.Installers
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<ISharedService, SharedService>();
             services.AddScoped<IDomainsRepository<Size>, SizeRepository>();
+            services.AddScoped<IDomainsRepository<OrderStatus>, OrderStatusRepository>();
 
             services.AddSwaggerGen(x =>
             {
