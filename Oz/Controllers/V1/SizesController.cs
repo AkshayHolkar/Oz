@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
+using Oz.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,25 +17,25 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class SizesController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IDomainsRepository<Size> _repository;
 
-        public SizesController(DataContext context)
+        public SizesController(IDomainsRepository<Size> repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         // GET: api/v1/Sizes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Size>>> GetSizes()
         {
-            return await _context.Sizes.ToListAsync();
+            return await _repository.GetAllAsync();
         }
 
         // GET: api/v1/Sizes/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Size>> GetSize(int id)
         {
-            var size = await _context.Sizes.FindAsync(id);
+            var size = await _repository.GetByIdAsync(id);
 
             if (size == null)
             {
@@ -47,30 +48,24 @@ namespace Oz.Controllers.V1
         // PUT: api/v1/Sizes/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSize(int id, [FromBody] Size size)
+        public async Task<IActionResult> PutSizeAsync(int id, [FromBody] Size size)
         {
             if (id != size.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(size).State = EntityState.Modified;
+            if (!_repository.isExist(id))
+            {
+                return NotFound();
+            }
 
-            try
+            if (!ModelState.IsValid)
             {
-                await _context.SaveChangesAsync();
+                return BadRequest(ModelState.ErrorCount);
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SizeExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            await _repository.UpdateAsync(size);
 
             return NoContent();
         }
@@ -80,8 +75,12 @@ namespace Oz.Controllers.V1
         [HttpPost]
         public async Task<ActionResult<Size>> PostSize([FromBody] Size size)
         {
-            _context.Sizes.Add(size);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.ErrorCount);
+            }
+
+            size = await _repository.CreateAsync(size);
 
             return CreatedAtAction(nameof(GetSize), new { id = size.Id }, size);
         }
@@ -89,23 +88,16 @@ namespace Oz.Controllers.V1
         // DELETE: api/v1/Sizes/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Size>> DeleteSize(int id)
+        public async Task<IActionResult> DeleteSizeAsync(int id)
         {
-            var size = await _context.Sizes.FindAsync(id);
-            if (size == null)
+            if (!_repository.isExist(id))
             {
                 return NotFound();
             }
 
-            _context.Sizes.Remove(size);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(id);
 
-            return size;
-        }
-
-        private bool SizeExists(int id)
-        {
-            return _context.Sizes.Any(e => e.Id == id);
+            return NoContent();
         }
     }
 }

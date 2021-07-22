@@ -3,7 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Oz.Domain;
 using Oz.Options;
+using Oz.Repositories;
 using Oz.Services;
 using System.Collections.Generic;
 using System.Text;
@@ -21,6 +23,7 @@ namespace Oz.Installers
 
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<ISharedService, SharedService>();
+            services.AddScoped<IDomainsRepository<Size>, SizeRepository>();
 
             services.AddSwaggerGen(x =>
             {
