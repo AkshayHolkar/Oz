@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Oz.Data;
+using Oz.Domain;
 using Oz.Dtos;
 using Oz.Extensions;
+using Oz.Repositories;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,32 +17,32 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IProductRepository _repository;
 
-        public ProductsController(DataContext context)
+        public ProductsController(IProductRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         // GET: api/v1/Products
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
-            return await _context.Products.Select(product => product.AsDto()).ToListAsync();
+            return await _repository.GetAllAsync();
         }
 
         // GET: api/v1/Products/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _repository.GetByIdAsync(id);
 
             if (product == null)
             {
                 return NotFound();
             }
 
-            return product.AsDto();
+            return product;
         }
 
         // PUT: api/v1/Products/5
@@ -53,23 +55,17 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            _context.Entry(productDto.AsProductFromProductDto()).State = EntityState.Modified;
+            if (!_repository.IsExist(productDto.Id))
+            {
+                return NotFound();
+            }
 
-            try
+            if (!ModelState.IsValid)
             {
-                await _context.SaveChangesAsync();
+                return BadRequest(ModelState.ErrorCount);
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            await _repository.UpdateAsync(productDto);
 
             return NoContent();
         }
@@ -79,11 +75,14 @@ namespace Oz.Controllers.V1
         [HttpPost]
         public async Task<ActionResult<ProductDto>> PostProduct([FromBody] PostProductDto postProductDto)
         {
-            var product = postProductDto.AsProductFromPostProductDto();
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.ErrorCount);
+            }
 
-            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product.AsDto());
+            var product = await _repository.CreateAsync(postProductDto);
+
+            return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 
         // DELETE: api/v1/Products/5
@@ -91,21 +90,14 @@ namespace Oz.Controllers.V1
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(id);
 
             return NoContent();
-        }
-
-        private bool ProductExists(int id)
-        {
-            return _context.Products.Any(e => e.Id == id);
         }
     }
 }
