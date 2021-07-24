@@ -47,6 +47,7 @@ namespace Oz.Extensions
         {
             return new Order()
             {
+                CustomerId = postOrderDto.CustomerId,
                 DateCreation = postOrderDto.DateCreation
             };
         }

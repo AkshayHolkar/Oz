@@ -7,6 +7,7 @@ namespace Oz.Dtos
 {
     public class PostOrderDto
     {
+        public string CustomerId { get; set; }
         public DateTime DateCreation { get; set; }
     }
 }
