@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
 using Oz.Services;
 using Oz.Dtos;
+using Oz.Repositories;
 
 namespace Oz.Controllers.V1
 {
@@ -19,13 +20,13 @@ namespace Oz.Controllers.V1
     [Route("api/v1/Orders")]
     public class OrdersController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IOrderRepository _repository;
         private readonly IIdentityService _identityService;
         private readonly ISharedService _sharedService;
 
-        public OrdersController(DataContext context, IIdentityService identityService, ISharedService sharedService)
+        public OrdersController(IOrderRepository repository, IIdentityService identityService, ISharedService sharedService)
         {
-            _context = context;
+            _repository = repository;
             _identityService = identityService;
             _sharedService = sharedService;
         }
@@ -36,34 +37,31 @@ namespace Oz.Controllers.V1
         {
             var userId = HttpContext.GetUserId();
             if (await _identityService.IsAdminAsync(userId) && string.IsNullOrEmpty(customerId))
-                return await _context.Orders.OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
+                return await _repository.GetAllAsync();
 
             if (await _identityService.IsAdminAsync(userId) && !string.IsNullOrEmpty(customerId))
-                return await _context.Orders.Where(i => i.CustomerId == customerId).OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
+                return await _repository.GetAllByCustomerAsync(customerId);
 
-            return await _context.Orders.Where(i => i.CustomerId == userId).OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
-
+            return await _repository.GetAllForCustomerAsync(userId);
         }
 
         // GET: api/v1/Orders/5
         [HttpGet("{id}")]
         public async Task<ActionResult<SingleOrderDto>> GetOrder(int id)
         {
-            var order = await _context.Orders
-                 .Include(i => i.OrderDetails)
-                        .FirstOrDefaultAsync(i => i.Id == id);
-
-            if (order == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            if (!_sharedService.UserOwnsDomain(order.CustomerId, HttpContext.GetUserId()))
+            var singleOrderDto = await _repository.GetByIdAsync(id);
+
+            if (!_sharedService.UserOwnsDomain(singleOrderDto.Value.CustomerId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this order" });
             }
 
-            return order.AsSingleOrderDto();
+            return singleOrderDto;
         }
 
         // PUT: api/v1/Orders/5
@@ -76,23 +74,17 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            _context.Entry(orderDto.AsOrderFromOrderDto()).State = EntityState.Modified;
+            if (!_repository.IsExist(orderDto.Id))
+            {
+                return NotFound();
+            }
 
-            try
+            if (!ModelState.IsValid)
             {
-                await _context.SaveChangesAsync();
+                return BadRequest(ModelState.ErrorCount);
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!OrderExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            await _repository.UpdateAsync(orderDto);
 
             return NoContent();
         }
@@ -107,10 +99,9 @@ namespace Oz.Controllers.V1
                 order.CustomerId = userId;
             order.OrderStatus = "In Progress";
 
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+            var orderDto = await _repository.CreateAsync(order);
 
-            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order.AsDto());
+            return CreatedAtAction(nameof(GetOrder), new { id = orderDto.Id }, orderDto);
         }
 
         // DELETE: api/v1/Orders/5
@@ -118,21 +109,14 @@ namespace Oz.Controllers.V1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            _context.Orders.Remove(order);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(id);
 
             return NoContent();
-        }
-
-        private bool OrderExists(int id)
-        {
-            return _context.Orders.Any(e => e.Id == id);
         }
     }
 }
