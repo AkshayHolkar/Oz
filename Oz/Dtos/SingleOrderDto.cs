@@ -12,6 +12,6 @@ namespace Oz.Dtos
         public DateTime DateCreation { get; set; }
         public string CustomerId { get; set; }
         public string OrderStatus { get; set; }
-        public ICollection<OrderDetail> OrderDetails { get; set; }
+        public ICollection<OrderDetailDto> OrderDetails { get; set; }
     }
 }

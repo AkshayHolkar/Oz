@@ -1,9 +1,6 @@
 ﻿using Oz.Domain;
 using Oz.Dtos;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Oz.Extensions
 {
@@ -22,13 +19,14 @@ namespace Oz.Extensions
 
         public static SingleOrderDto AsSingleOrderDto(this Order order)
         {
+            var orderDetailsAsDto = GetOrderDetailsAsDto(order.OrderDetails);
             return new SingleOrderDto
             {
                 Id = order.Id,
                 DateCreation = order.DateCreation,
                 CustomerId = order.CustomerId,
                 OrderStatus = order.OrderStatus,
-                OrderDetails = order.OrderDetails
+                OrderDetails = orderDetailsAsDto
             };
         }
 
@@ -50,6 +48,18 @@ namespace Oz.Extensions
                 CustomerId = postOrderDto.CustomerId,
                 DateCreation = postOrderDto.DateCreation
             };
+        }
+
+        private static ICollection<OrderDetailDto> GetOrderDetailsAsDto(ICollection<OrderDetail> orderDetails)
+        {
+            var orderDetailDtos = new List<OrderDetailDto>();
+
+            foreach (var orderDetail in orderDetails)
+            {
+                orderDetailDtos.Add(orderDetail.AsDto());
+            }
+
+            return orderDetailDtos;
         }
     }
 }
