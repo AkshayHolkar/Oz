@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Dtos;
 using Oz.Extensions;
+using Oz.Repositories;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,11 +17,11 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class OrderDetailsController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IOrderDetailRepository _repository;
 
-        public OrderDetailsController(DataContext context)
+        public OrderDetailsController(IOrderDetailRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         // GET: api/v1/OrderDetails
@@ -29,7 +30,7 @@ namespace Oz.Controllers.V1
         {
             if (orderId != 0)
             {
-                return await _context.OrderDetails.Where(i => i.OrderId == orderId).Select(orderDetail => orderDetail.AsDto()).ToListAsync();
+                return await _repository.GetAllAsync(orderId);
             }
 
             return NotFound();
@@ -39,14 +40,12 @@ namespace Oz.Controllers.V1
         [HttpGet("{id}")]
         public async Task<ActionResult<OrderDetailDto>> GetOrderDetail(int id)
         {
-            var orderDetail = await _context.OrderDetails.FindAsync(id);
-
-            if (orderDetail == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            return orderDetail.AsDto();
+            return await _repository.GetByIdAsync(id);
         }
 
         // PUT: api/v1/OrderDetails/5
@@ -59,23 +58,17 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            _context.Entry(orderDetailDto.AsOrderFromOrderDetailDto()).State = EntityState.Modified;
+            if (!_repository.IsExist(orderDetailDto.Id))
+            {
+                return NotFound();
+            }
 
-            try
+            if (!ModelState.IsValid)
             {
-                await _context.SaveChangesAsync();
+                return BadRequest(ModelState.ErrorCount);
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!OrderDetailExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            await _repository.UpdateAsync(orderDetailDto);
 
             return NoContent();
         }
@@ -84,11 +77,14 @@ namespace Oz.Controllers.V1
         [HttpPost]
         public async Task<ActionResult<OrderDetailDto>> PostOrderDetail([FromBody] PostOrderDetailDto postOrderDetailDto)
         {
-            var orderDetail = postOrderDetailDto.AsOrderFromPostOrderDetailDto();
-            _context.OrderDetails.Add(orderDetail);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.ErrorCount);
+            }
 
-            return CreatedAtAction(nameof(GetOrderDetail), new { id = orderDetail.Id }, orderDetail.AsDto());
+            var orderDetailDto = await _repository.CreateAsync(postOrderDetailDto);
+
+            return CreatedAtAction(nameof(GetOrderDetail), new { id = orderDetailDto.Id }, orderDetailDto);
         }
 
         // DELETE: api/v1/OrderDetails/5
@@ -96,21 +92,14 @@ namespace Oz.Controllers.V1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrderDetail(int id)
         {
-            var orderDetail = await _context.OrderDetails.FindAsync(id);
-            if (orderDetail == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            _context.OrderDetails.Remove(orderDetail);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(id);
 
             return NoContent();
-        }
-
-        private bool OrderDetailExists(int id)
-        {
-            return _context.OrderDetails.Any(e => e.Id == id);
         }
     }
 }
