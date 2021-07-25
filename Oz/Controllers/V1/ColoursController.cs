@@ -1,14 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oz.Data;
-using Oz.Domain;
-using Oz.Extensions;
 using Oz.Dtos;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using Oz.Repositories;
 
 namespace Oz.Controllers.V1
 {
@@ -16,11 +12,11 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class ColoursController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IColourRepository _repository;
 
-        public ColoursController(DataContext context)
+        public ColoursController(IColourRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         // GET: api/v1/Colours
@@ -28,22 +24,20 @@ namespace Oz.Controllers.V1
         public async Task<ActionResult<IEnumerable<ColourDto>>> GetColours([FromQuery] int productId)
         {
             if (productId != 0)
-                return await _context.Colours.Where(i => i.ProductId == productId).Select(colour => colour.AsDto()).ToListAsync();
-            return await _context.Colours.Select(colour => colour.AsDto()).ToListAsync();
+                return await _repository.GetAllProductColorsAsync(productId);
+            return await _repository.GetAllAsync();
         }
 
         // GET: api/v1/Colours/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ColourDto>> GetColour(int id)
         {
-            var colour = await _context.Colours.FindAsync(id);
-
-            if (colour == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            return colour.AsDto();
+            return await _repository.GetByIdAsync(id);
         }
 
         // PUT: api/v1/Colours/5
@@ -56,23 +50,17 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            _context.Entry(colourDto.AsColourFromColourDto()).State = EntityState.Modified;
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            try
+            if (!_repository.IsExist(id))
             {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ColourExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            await _repository.UpdateAsync(colourDto);
 
             return NoContent();
         }
@@ -82,11 +70,14 @@ namespace Oz.Controllers.V1
         [HttpPost]
         public async Task<ActionResult<ColourDto>> PostColour([FromBody] PostColourDto postColourDto)
         {
-            var colour = postColourDto.AsCartFromPostColourDto();
-            _context.Colours.Add(colour);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            return CreatedAtAction(nameof(GetColour), new { id = colour.Id }, colour.AsDto());
+            var colourDto = await _repository.CreateAsync(postColourDto);
+
+            return CreatedAtAction(nameof(GetColour), new { id = colourDto.Id }, colourDto);
         }
 
         // DELETE: api/v1/Colours/5
@@ -94,21 +85,14 @@ namespace Oz.Controllers.V1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteColour(int id)
         {
-            var colour = await _context.Colours.FindAsync(id);
-            if (colour == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            _context.Colours.Remove(colour);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(id);
 
             return NoContent();
-        }
-
-        private bool ColourExists(int id)
-        {
-            return _context.Colours.Any(e => e.Id == id);
         }
     }
 }
