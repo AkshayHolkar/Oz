@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
 using Oz.Services;
 using Oz.Dtos;
+using Oz.Repositories;
 
 namespace Oz.Controllers.V1
 {
@@ -20,13 +21,13 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IAccountRepository _repository;
         private readonly IIdentityService _identityService;
         private readonly ISharedService _sharedService;
 
-        public AccountsController(DataContext context, IIdentityService identityService, ISharedService sharedService)
+        public AccountsController(IAccountRepository repository, IIdentityService identityService, ISharedService sharedService)
         {
-            _context = context;
+            _repository = repository;
             _identityService = identityService;
             _sharedService = sharedService;
         }
@@ -36,18 +37,17 @@ namespace Oz.Controllers.V1
         [HttpGet("{_}/{unused}")]
         public async Task<ActionResult<IEnumerable<AccountDto>>> GetAccounts(bool _, bool unused)
         {
-            return await _context.Accounts.Select(account => account.AsDto()).ToListAsync();
+            return await _repository.GetAllAsync();
         }
 
         // GET: api/v1/Accounts
         [HttpGet]
         public async Task<ActionResult<AccountDto>> GetAccount()
         {
-            var account = await _context.Accounts.FirstOrDefaultAsync(i => i.UserId == HttpContext.GetUserId());
-
-            if (account == null)
+            var userId = HttpContext.GetUserId();
+            if (!_repository.IsExist(userId))
                 return NotFound();
-            return account.AsDto();
+            return await _repository.GetIndividualAsync(userId);
 
         }
 
@@ -56,14 +56,10 @@ namespace Oz.Controllers.V1
         [HttpGet("{id}")]
         public async Task<ActionResult<AccountDto>> GetAccount(string id)
         {
-            var account = await _context.Accounts.FindAsync(id);
-
-            if (account == null)
-            {
+            if (!_repository.IsExist(id))
                 return NotFound();
-            }
 
-            return account.AsDto();
+            return await _repository.GetByIdAsync(id);
         }
 
         // PUT: api/v1/Accounts/5
@@ -75,81 +71,70 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            var account = accountDto.AsAccountFromAccountDto();
-            var userId = HttpContext.GetUserId();
-            var userOwnAccount = _sharedService.UserOwnsDomain(account.UserId, userId) || await _identityService.IsAdminAsync(userId);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            if (!userOwnAccount)
+            if (!_repository.IsExist(accountDto.UserId))
+            {
+                return NotFound();
+            }
+
+            var userId = HttpContext.GetUserId();
+            var isApprovedUser = _sharedService.UserOwnsDomain(accountDto.UserId, userId) || await _identityService.IsAdminAsync(userId);
+
+            if (!isApprovedUser)
             {
                 return BadRequest(new { error = "You do not own this account" });
             }
 
-            _context.Entry(account).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AccountExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await _repository.UpdateAsync(accountDto);
 
             return NoContent();
         }
 
         // POST: api/v1/Accounts
         [HttpPost]
-        public async Task<ActionResult<AccountDto>> PostAccount([FromBody] CreateAccountDto accountDto)
+        public async Task<ActionResult<AccountDto>> PostAccount([FromBody] CreateAccountDto createAccountDto)
         {
-            var a = await _context.Accounts.FindAsync(HttpContext.GetUserId());
-            if (a != null)
+            if (_repository.IsExist(HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "This account exist" });
             }
 
-            Account account = accountDto.AsAccountFromCreateAccountDto();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var account = createAccountDto.AsAccountFromCreateAccountDto();
             account.UserId = HttpContext.GetUserId();
 
-            _context.Accounts.Add(account);
-            await _context.SaveChangesAsync();
+            var accountDto = await _repository.CreateAsync(account);
 
-            return CreatedAtAction(nameof(GetAccount), new { id = account.UserId }, account.AsDto());
+            return CreatedAtAction(nameof(GetAccount), new { id = accountDto.UserId }, accountDto);
         }
 
         // DELETE: api/v1/Accounts/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAccount(string id)
         {
-            var account = await _context.Accounts.FindAsync(id);
-            if (account == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            var userOwnAccount = _sharedService.UserOwnsDomain(account.UserId, HttpContext.GetUserId());
+            var accountDto = await _repository.GetByIdAsync(id);
 
-            if (!userOwnAccount)
+            if (!_sharedService.UserOwnsDomain(accountDto.Value.UserId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this account" });
             }
 
-            _context.Accounts.Remove(account);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(id);
 
             return NoContent();
-        }
-
-        private bool AccountExists(string id)
-        {
-            return _context.Accounts.Any(e => e.UserId == id);
         }
     }
 }
