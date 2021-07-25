@@ -54,7 +54,7 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            if (!_repository.isExist(id))
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
@@ -89,7 +89,7 @@ namespace Oz.Controllers.V1
         [HttpDelete("{id}")]
         public async Task<ActionResult<OrderStatus>> DeleteOrderStatus(int id)
         {
-            if (!_repository.isExist(id))
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }

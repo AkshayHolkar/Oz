@@ -18,12 +18,12 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<ActionResult<IEnumerable<Category>>> GetAllAsync()
+        public async Task<List<Category>> GetAllAsync()
         {
             return await _context.Categories.ToListAsync();
         }
 
-        public async Task<ActionResult<Category>> GetByIdAsync(int id)
+        public async Task<Category> GetByIdAsync(int id)
         {
             return await _context.Categories.FindAsync(id);
         }
@@ -35,22 +35,20 @@ namespace Oz.Repositories
             return entity;
         }
 
-        public async Task<ActionResult<bool>> UpdateAsync(Category entity)
+        public async Task UpdateAsync(Category entity)
         {
             _context.Entry(entity).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return true;
         }
 
-        public async Task<ActionResult<bool>> DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
             var category = await _context.Categories.FindAsync(id);
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
-            return true;
         }
 
-        public bool isExist(int id)
+        public bool IsExist(int id)
         {
             return _context.Categories.Any(e => e.Id == id);
         }

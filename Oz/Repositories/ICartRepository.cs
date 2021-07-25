@@ -10,11 +10,11 @@ namespace Oz.Repositories
 {
     public interface ICartRepository
     {
-        Task<ActionResult<IEnumerable<CartDto>>> GetAllAsync(string userId);
-        Task<ActionResult<CartDto>> GetByIdAsync(int id);
+        Task<List<CartDto>> GetAllAsync(string userId);
+        Task<CartDto> GetByIdAsync(int id);
         Task<CartDto> CreateAsync(Cart cart);
-        Task<ActionResult<bool>> UpdateAsync(CartDto cartDto);
-        Task<ActionResult<bool>> DeleteAsync(int id);
+        Task UpdateAsync(CartDto cartDto);
+        Task DeleteAsync(int id);
         bool IsExist(int id);
     }
 }

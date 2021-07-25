@@ -20,32 +20,31 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllAsync()
+        public async Task<List<OrderDto>> GetAllAsync()
         {
             return await _context.Orders.OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
         }
 
-        public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllByCustomerAsync(string customerId)
+        public async Task<List<OrderDto>> GetAllByCustomerAsync(string customerId)
         {
             return await _context.Orders.Where(i => i.CustomerId == customerId).OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
         }
 
-        public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllForCustomerAsync(string userId)
+        public async Task<List<OrderDto>> GetAllForCustomerAsync(string userId)
         {
             return await _context.Orders.Where(i => i.CustomerId == userId).OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
         }
 
-        public async Task<ActionResult<SingleOrderDto>> GetByIdAsync(int id)
+        public async Task<SingleOrderDto> GetByIdAsync(int id)
         {
             var order = await _context.Orders.Include(i => i.OrderDetails).FirstOrDefaultAsync(i => i.Id == id);
             return order.AsSingleOrderDto();
         }
 
-        public async Task<ActionResult<bool>> UpdateAsync(OrderDto orderDto)
+        public async Task UpdateAsync(OrderDto orderDto)
         {
             _context.Entry(orderDto.AsOrderFromOrderDto()).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return true;
         }
 
         public async Task<OrderDto> CreateAsync(Order order)
@@ -55,12 +54,11 @@ namespace Oz.Repositories
             return order.AsDto();
         }
 
-        public async Task<ActionResult<bool>> DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
             var order = await _context.Orders.FindAsync(id);
             _context.Orders.Remove(order);
             await _context.SaveChangesAsync();
-            return true;
         }
 
         public bool IsExist(int id)

@@ -19,12 +19,12 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetAllAsync()
+        public async Task<List<ProductDto>> GetAllAsync()
         {
             return await _context.Products.Select(product => product.AsDto()).ToListAsync();
         }
 
-        public async Task<ActionResult<ProductDto>> GetByIdAsync(int id)
+        public async Task<ProductDto> GetByIdAsync(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null)
@@ -38,23 +38,20 @@ namespace Oz.Repositories
             var product = postProductDto.AsProductFromPostProductDto();
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
-
             return product.AsDto();
         }
 
-        public async Task<ActionResult<bool>> UpdateAsync(ProductDto productDto)
+        public async Task UpdateAsync(ProductDto productDto)
         {
             _context.Entry(productDto.AsProductFromProductDto()).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return true;
         }
 
-        public async Task<ActionResult<bool>> DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
             var product = await _context.Products.FindAsync(id);
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
-            return true;
         }
 
         public bool IsExist(int id)

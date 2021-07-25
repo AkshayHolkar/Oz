@@ -7,12 +7,12 @@ namespace Oz.Repositories
 {
     public interface IColourRepository
     {
-        Task<ActionResult<IEnumerable<ColourDto>>> GetAllAsync();
-        Task<ActionResult<IEnumerable<ColourDto>>> GetAllProductColorsAsync(int productId);
-        Task<ActionResult<ColourDto>> GetByIdAsync(int id);
+        Task<List<ColourDto>> GetAllAsync();
+        Task<List<ColourDto>> GetAllProductColorsAsync(int productId);
+        Task<ColourDto> GetByIdAsync(int id);
         Task<ColourDto> CreateAsync(PostColourDto postColourDto);
-        Task<ActionResult<bool>> UpdateAsync(ColourDto colourDto);
-        Task<ActionResult<bool>> DeleteAsync(int id);
+        Task UpdateAsync(ColourDto colourDto);
+        Task DeleteAsync(int id);
         bool IsExist(int id);
     }
 }

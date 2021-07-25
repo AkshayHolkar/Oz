@@ -43,7 +43,7 @@ namespace Oz.Controllers.V1
             }
             var cart = await _repository.GetByIdAsync(id);
 
-            if (!_sharedService.UserOwnsDomain(cart.Value.CustomerId, HttpContext.GetUserId()))
+            if (!_sharedService.UserOwnsDomain(cart.CustomerId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this cart" });
             }
@@ -109,7 +109,7 @@ namespace Oz.Controllers.V1
 
             var cartDto = await _repository.GetByIdAsync(id);
 
-            if (!_sharedService.UserOwnsDomain(cartDto.Value.CustomerId, HttpContext.GetUserId()))
+            if (!_sharedService.UserOwnsDomain(cartDto.CustomerId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this cart" });
             }

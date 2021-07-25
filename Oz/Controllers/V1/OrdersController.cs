@@ -56,7 +56,7 @@ namespace Oz.Controllers.V1
 
             var singleOrderDto = await _repository.GetByIdAsync(id);
 
-            if (!_sharedService.UserOwnsDomain(singleOrderDto.Value.CustomerId, HttpContext.GetUserId()))
+            if (!_sharedService.UserOwnsDomain(singleOrderDto.CustomerId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this order" });
             }

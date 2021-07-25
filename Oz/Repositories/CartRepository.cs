@@ -21,12 +21,12 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<ActionResult<IEnumerable<CartDto>>> GetAllAsync(string userId)
+        public async Task<List<CartDto>> GetAllAsync(string userId)
         {
             return await _context.Carts.Where(i => i.CustomerId == userId).Select(cart => cart.AsDto()).ToListAsync();
         }
 
-        public async Task<ActionResult<CartDto>> GetByIdAsync(int id)
+        public async Task<CartDto> GetByIdAsync(int id)
         {
             var cart = await _context.Carts.FindAsync(id);
             return cart.AsDto();
@@ -40,19 +40,17 @@ namespace Oz.Repositories
             return cart.AsDto();
         }
 
-        public async Task<ActionResult<bool>> UpdateAsync(CartDto cartDto)
+        public async Task UpdateAsync(CartDto cartDto)
         {
             _context.Entry(cartDto.AsCartFromCartDto()).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return true;
         }
 
-        public async Task<ActionResult<bool>> DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
             var cart = await _context.Carts.FindAsync(id);
             _context.Carts.Remove(cart);
             await _context.SaveChangesAsync();
-            return true;
         }
 
         public bool IsExist(int id)

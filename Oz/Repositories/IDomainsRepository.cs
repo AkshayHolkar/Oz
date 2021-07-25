@@ -6,11 +6,11 @@ namespace Oz.Repositories
 {
     public interface IDomainsRepository<T>
     {
-        Task<ActionResult<IEnumerable<T>>> GetAllAsync();
-        Task<ActionResult<T>> GetByIdAsync(int id);
+        Task<List<T>> GetAllAsync();
+        Task<T> GetByIdAsync(int id);
         Task<T> CreateAsync(T entity);
-        Task<ActionResult<bool>> UpdateAsync(T entity);
-        Task<ActionResult<bool>> DeleteAsync(int id);
-        bool isExist(int id);
+        Task UpdateAsync(T entity);
+        Task DeleteAsync(int id);
+        bool IsExist(int id);
     }
 }

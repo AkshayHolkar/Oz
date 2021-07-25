@@ -19,12 +19,12 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<ActionResult<IEnumerable<OrderDetailDto>>> GetAllAsync(int orderId)
+        public async Task<List<OrderDetailDto>> GetAllAsync(int orderId)
         {
             return await _context.OrderDetails.Where(i => i.OrderId == orderId).Select(orderDetail => orderDetail.AsDto()).ToListAsync();
         }
 
-        public async Task<ActionResult<OrderDetailDto>> GetByIdAsync(int id)
+        public async Task<OrderDetailDto> GetByIdAsync(int id)
         {
             var orderDetail = await _context.OrderDetails.FindAsync(id);
             return orderDetail.AsDto();
@@ -38,20 +38,17 @@ namespace Oz.Repositories
             return orderDetail.AsDto();
         }
 
-        public async Task<ActionResult<bool>> UpdateAsync(OrderDetailDto orderDetailDto)
+        public async Task UpdateAsync(OrderDetailDto orderDetailDto)
         {
             _context.Entry(orderDetailDto.AsOrderFromOrderDetailDto()).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return true;
         }
 
-        public async Task<ActionResult<bool>> DeleteAsync(int id)
+        public async Task DeleteAsync(int id)
         {
             var orderDetail = await _context.OrderDetails.FindAsync(id);
-
             _context.OrderDetails.Remove(orderDetail);
             await _context.SaveChangesAsync();
-            return true;
         }
 
         public bool IsExist(int id)

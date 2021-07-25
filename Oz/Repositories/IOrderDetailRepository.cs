@@ -7,11 +7,11 @@ namespace Oz.Repositories
 {
     public interface IOrderDetailRepository
     {
-        Task<ActionResult<IEnumerable<OrderDetailDto>>> GetAllAsync(int orderId);
-        Task<ActionResult<OrderDetailDto>> GetByIdAsync(int id);
+        Task<List<OrderDetailDto>> GetAllAsync(int orderId);
+        Task<OrderDetailDto> GetByIdAsync(int id);
         Task<OrderDetailDto> CreateAsync(PostOrderDetailDto postOrderDetailDto);
-        Task<ActionResult<bool>> UpdateAsync(OrderDetailDto orderDetailDto);
-        Task<ActionResult<bool>> DeleteAsync(int id);
+        Task UpdateAsync(OrderDetailDto orderDetailDto);
+        Task DeleteAsync(int id);
         bool IsExist(int id);
     }
 }

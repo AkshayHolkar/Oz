@@ -127,7 +127,7 @@ namespace Oz.Controllers.V1
 
             var accountDto = await _repository.GetByIdAsync(id);
 
-            if (!_sharedService.UserOwnsDomain(accountDto.Value.UserId, HttpContext.GetUserId()))
+            if (!_sharedService.UserOwnsDomain(accountDto.UserId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this account" });
             }
