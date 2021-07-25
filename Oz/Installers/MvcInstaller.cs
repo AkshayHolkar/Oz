@@ -31,6 +31,7 @@ namespace Oz.Installers
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
             services.AddScoped<IAccountRepository, AccountRepository>();
+            services.AddScoped<IColourRepository, ColourRepository>();
 
             services.AddSwaggerGen(x =>
             {
