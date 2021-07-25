@@ -61,14 +61,19 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (!_repository.IsExist(cartDto.Id))
             {
                 return NotFound();
             }
 
-            if (!ModelState.IsValid)
+            if (!_sharedService.UserOwnsDomain(cartDto.CustomerId, HttpContext.GetUserId()))
             {
-                return BadRequest(ModelState.ErrorCount);
+                return BadRequest(new { error = "You do not own this cart" });
             }
 
             await _repository.UpdateAsync(cartDto);
@@ -97,13 +102,14 @@ namespace Oz.Controllers.V1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCart(int id)
         {
-            var cart = await _repository.GetByIdAsync(id);
-            if (cart == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            if (!_sharedService.UserOwnsDomain(cart.Value.CustomerId, HttpContext.GetUserId()))
+            var cartDto = await _repository.GetByIdAsync(id);
+
+            if (!_sharedService.UserOwnsDomain(cartDto.Value.CustomerId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this cart" });
             }
