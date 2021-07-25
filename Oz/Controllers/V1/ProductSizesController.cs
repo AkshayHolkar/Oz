@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oz.Data;
 using Oz.Dtos;
-using Oz.Extensions;
+using Oz.Repositories;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
@@ -15,11 +12,11 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class ProductSizesController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IProductSizeRepository _repository;
 
-        public ProductSizesController(DataContext context)
+        public ProductSizesController(IProductSizeRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         // GET: api/v1/ProductSizes
@@ -27,22 +24,20 @@ namespace Oz.Controllers.V1
         public async Task<ActionResult<IEnumerable<ProductSizeDto>>> GetProductSizes([FromQuery] int productId)
         {
             if (productId != 0)
-                return await _context.ProductSizes.Where(i => i.ProductId == productId).Select(product => product.AsDto()).ToListAsync();
-            return await _context.ProductSizes.Select(product => product.AsDto()).ToListAsync();
+                return await _repository.GetAllProductSizesByProductIdAsync(productId);
+            return await _repository.GetAllAsync();
         }
 
         // GET: api/v1/ProductSizes/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductSizeDto>> GetProductSize(int id)
         {
-            var productSize = await _context.ProductSizes.FindAsync(id);
-
-            if (productSize == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            return productSize.AsDto();
+            return await _repository.GetByIdAsync(id);
         }
 
         // PUT: api/v1/ProductSizes/5
@@ -55,23 +50,17 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            _context.Entry(productSizeDto.AsProductSizeFromProductSizeDto()).State = EntityState.Modified;
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            try
+            if (!_repository.IsExist(id))
             {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductSizeExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            await _repository.UpdateAsync(productSizeDto);
 
             return NoContent();
         }
@@ -81,11 +70,14 @@ namespace Oz.Controllers.V1
         [HttpPost]
         public async Task<ActionResult<ProductSizeDto>> PostProductSize([FromBody] PostProductSizeDto postProductSizeDto)
         {
-            var productSize = postProductSizeDto.AsProductSizeFromPostProductSizeDto();
-            _context.ProductSizes.Add(productSize);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            return CreatedAtAction(nameof(GetProductSize), new { id = productSize.Id }, productSize.AsDto());
+            var productSizeDto = await _repository.CreateAsync(postProductSizeDto);
+
+            return CreatedAtAction(nameof(GetProductSize), new { id = productSizeDto.Id }, productSizeDto);
         }
 
         // DELETE: api/v1/ProductSizes/5
@@ -93,21 +85,14 @@ namespace Oz.Controllers.V1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProductSize(int id)
         {
-            var productSize = await _context.ProductSizes.FindAsync(id);
-            if (productSize == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
 
-            _context.ProductSizes.Remove(productSize);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(id);
 
             return NoContent();
-        }
-
-        private bool ProductSizeExists(int id)
-        {
-            return _context.ProductSizes.Any(e => e.Id == id);
         }
     }
 }
