@@ -7,6 +7,7 @@ using Oz.Domain;
 using Oz.Options;
 using Oz.Repositories;
 using Oz.Services;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -92,6 +93,14 @@ namespace Oz.Installers
             });
 
             services.AddCors();
+
+            //Configure health checks
+            services.AddHealthChecks()
+                .AddSqlServer(
+                configuration.GetConnectionString("DefaultConnection"),
+                name: "aspnet-Oz-17C62DFE-8803-4531-A395-DAF05FBE3A65",
+                timeout: TimeSpan.FromSeconds(2),
+                tags: new[] { "ready" });
         }
     }
 }
