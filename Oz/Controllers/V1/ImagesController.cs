@@ -36,6 +36,17 @@ namespace Oz.Controllers.V1
             return GetAllImagesWithImageSrc(await _repository.GetAllAsync());
         }
 
+        // GET: api/v1/Images/5/true
+        [HttpGet("{imageId}/{_}")]
+        public async Task<ActionResult<ImageDto>> GetImage(int imageId, bool _)
+        {
+            if (!_repository.IsExist(imageId))
+            {
+                return NotFound();
+            }
+            return GetImageWithImageSrc(await _repository.GetByIdAsync(imageId));
+        }
+
         // GET: api/v1/Images/5
         [HttpGet("{productId}")]
         public async Task<ActionResult<ImageDto>> GetImage(int productId)
@@ -84,7 +95,7 @@ namespace Oz.Controllers.V1
 
             var imageDto = await _repository.CreateAsync(image);
 
-            return CreatedAtAction(nameof(GetImage), new { productId = imageDto.Id }, GetImageWithImageSrc(imageDto));
+            return CreatedAtAction(nameof(GetImage), new { imageId = imageDto.Id, _ = true }, GetImageWithImageSrc(imageDto));
         }
 
         // DELETE: api/v1/Images/5
