@@ -3,11 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oz.Data;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Extensions;
+using Oz.Repositories;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,12 +18,12 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class ImagesController : ControllerBase
     {
-        private readonly DataContext _context;
+        private readonly IImageRepository _repository;
         private readonly IWebHostEnvironment _hostEnvironment;
 
-        public ImagesController(DataContext context, IWebHostEnvironment hostEnvironment)
+        public ImagesController(IImageRepository repository, IWebHostEnvironment hostEnvironment)
         {
-            _context = context;
+            _repository = repository;
             _hostEnvironment = hostEnvironment;
         }
 
@@ -34,45 +32,19 @@ namespace Oz.Controllers.V1
         public async Task<ActionResult<IEnumerable<ImageDto>>> GetImages([FromQuery] int productId)
         {
             if (productId != 0)
-                return await _context.Images.Select(x => new ImageDto()
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Main = x.Main,
-                    ProductId = x.ProductId,
-                    ImageScr = String.Format("{0}://{1}{2}/Images/{3}", Request.Scheme, Request.Host, Request.PathBase, x.Name)
-                })
-                .Where(i => i.ProductId == productId).ToListAsync();
-
-            return await _context.Images.Select(x => new ImageDto()
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Main = x.Main,
-                ProductId = x.ProductId,
-                ImageScr = String.Format("{0}://{1}{2}/Images/{3}", Request.Scheme, Request.Host, Request.PathBase, x.Name)
-            }).ToListAsync();
+                return GetAllImagesWithImageSrc(await _repository.GetAllProductImagesAsync(productId));
+            return GetAllImagesWithImageSrc(await _repository.GetAllAsync());
         }
 
         // GET: api/v1/Images/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ImageDto>> GetImage(int id)
+        [HttpGet("{productId}")]
+        public async Task<ActionResult<ImageDto>> GetImage(int productId)
         {
-            var image = await _context.Images.Where(i => i.Main == true && i.ProductId == id).Select(x => new ImageDto()
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Main = x.Main,
-                ProductId = x.ProductId,
-                ImageScr = String.Format("{0}://{1}{2}/Images/{3}", Request.Scheme, Request.Host, Request.PathBase, x.Name)
-            }).FirstOrDefaultAsync();
-
-            if (image == null)
+            if (!_repository.IsMainImageExist(productId))
             {
                 return NotFound();
             }
-
-            return image;
+            return GetImageWithImageSrc(await _repository.GetMainImageAsync(productId));
         }
 
         // PUT: api/v1/Images/5
@@ -85,23 +57,17 @@ namespace Oz.Controllers.V1
                 return BadRequest();
             }
 
-            _context.Entry(putImageDto.AsImageFromPutImageDto()).State = EntityState.Modified;
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            try
+            if (!_repository.IsExist(id))
             {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ImageExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
+            await _repository.UpdateAsync(putImageDto);
 
             return NoContent();
         }
@@ -115,10 +81,10 @@ namespace Oz.Controllers.V1
             image.ProductId = Int32.Parse(data["productId"]);
             image.Main = bool.Parse(data["main"]);
             image.Name = await SaveImage(imageFile);
-            _context.Images.Add(image);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetImage), new { id = image.Id }, image.AsDto());
+            var imageDto = await _repository.CreateAsync(image);
+
+            return CreatedAtAction(nameof(GetImage), new { productId = imageDto.Id }, GetImageWithImageSrc(imageDto));
         }
 
         // DELETE: api/v1/Images/5
@@ -126,22 +92,31 @@ namespace Oz.Controllers.V1
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteImage(int id)
         {
-            var image = await _context.Images.FindAsync(id);
-            if (image == null)
+            if (!_repository.IsExist(id))
             {
                 return NotFound();
             }
+            var image = await _repository.GetByIdAsync(id);
             DeleteImage(image.Name);
-
-            _context.Images.Remove(image);
-            await _context.SaveChangesAsync();
+            await _repository.DeleteAsync(id);
 
             return NoContent();
         }
 
-        private bool ImageExists(int id)
+        private List<ImageDto> GetAllImagesWithImageSrc(List<ImageDto> imageDtoList)
         {
-            return _context.Images.Any(e => e.Id == id);
+            List<ImageDto> images = new List<ImageDto>();
+            foreach (var image in imageDtoList)
+            {
+                images.Add(GetImageWithImageSrc(image));
+            }
+            return images;
+        }
+
+        private ImageDto GetImageWithImageSrc(ImageDto image)
+        {
+            image.ImageScr = String.Format("{0}://{1}{2}/Images/{3}", Request.Scheme, Request.Host, Request.PathBase, image.Name);
+            return image;
         }
 
         [NonAction]
