@@ -1,14 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oz.Data;
 using Oz.Domain;
+using Oz.Dtos;
 using Oz.Repositories;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
@@ -73,13 +69,14 @@ namespace Oz.Controllers.V1
         // POST: api/v1/Sizes
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<Size>> PostSize([FromBody] Size size)
+        public async Task<ActionResult<Size>> PostSize([FromBody] PostSizeDto postSizeDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState.ErrorCount);
             }
 
+            var size = new Size { Name = postSizeDto.Name };
             size = await _repository.CreateAsync(size);
 
             return CreatedAtAction(nameof(GetSize), new { id = size.Id }, size);
