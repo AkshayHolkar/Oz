@@ -1,14 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oz.Data;
 using Oz.Domain;
+using Oz.Dtos;
 using Oz.Repositories;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
@@ -73,13 +69,14 @@ namespace Oz.Controllers.V1
         // POST: api/v1/Categories
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<Category>> PostCategory([FromBody] Category category)
+        public async Task<ActionResult<Category>> PostCategory([FromBody] PostCategoryDto postCategoryDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState.ErrorCount);
             }
 
+            var category = new Category { Name = postCategoryDto.Name };
             category = await _repository.CreateAsync(category);
 
             return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category);
@@ -88,7 +85,7 @@ namespace Oz.Controllers.V1
         // DELETE: api/v1/Categories/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Category>> DeleteCategory(int id)
+        public async Task<ActionResult> DeleteCategory(int id)
         {
             if (!_repository.IsExist(id))
             {
