@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oz.Data;
 using Oz.Domain;
+using Oz.Dtos;
 using Oz.Repositories;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
@@ -72,13 +70,14 @@ namespace Oz.Controllers.V1
         // POST: api/v1/OrderStatuses
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<OrderStatus>> PostOrderStatus([FromBody] OrderStatus orderStatus)
+        public async Task<ActionResult<OrderStatus>> PostOrderStatus([FromBody] PostOrderStatusDto postOrderStatusDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState.ErrorCount);
             }
 
+            var orderStatus = new OrderStatus { Name = postOrderStatusDto.Name };
             orderStatus = await _repository.CreateAsync(orderStatus);
 
             return CreatedAtAction(nameof(GetOrderStatus), new { id = orderStatus.Id }, orderStatus);
@@ -87,7 +86,7 @@ namespace Oz.Controllers.V1
         // DELETE: api/v1/OrderStatuses/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult<OrderStatus>> DeleteOrderStatus(int id)
+        public async Task<IActionResult> DeleteOrderStatus(int id)
         {
             if (!_repository.IsExist(id))
             {
