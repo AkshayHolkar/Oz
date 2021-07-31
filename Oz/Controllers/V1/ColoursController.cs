@@ -21,7 +21,7 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Colours
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ColourDto>>> GetColours([FromQuery] int productId)
+        public async Task<ActionResult<IEnumerable<ColourDto>>> GetColours([FromQuery] int productId = 0)
         {
             if (productId != 0)
                 return await _repository.GetAllProductColorsAsync(productId);
