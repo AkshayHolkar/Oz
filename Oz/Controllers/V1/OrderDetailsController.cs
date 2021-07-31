@@ -1,13 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oz.Data;
 using Oz.Dtos;
-using Oz.Extensions;
 using Oz.Repositories;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
@@ -26,7 +22,7 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/OrderDetails
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderDetailDto>>> GetOrderDetails([FromQuery] int orderId)
+        public async Task<ActionResult<IEnumerable<OrderDetailDto>>> GetOrderDetails([FromQuery] int orderId = 0)
         {
             if (orderId != 0)
             {
