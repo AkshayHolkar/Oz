@@ -27,6 +27,11 @@ namespace Oz.Controllers.V1
             _hostEnvironment = hostEnvironment;
         }
 
+        /// <summary>
+        /// Returns All Images Or If ProductId Provided Returns All Product Images
+        /// </summary>
+        /// <param name="productId"></param>
+        /// <returns></returns>
         // GET: api/v1/Images
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ImageDto>>> GetImages([FromQuery] int productId)
@@ -36,8 +41,16 @@ namespace Oz.Controllers.V1
             return GetAllImagesWithImageSrc(await _repository.GetAllAsync());
         }
 
+        /// <summary>
+        /// Returns Image By Id
+        /// </summary>
+        /// <param name="imageId"></param>
+        /// <param name="_"></param>
+        /// <returns></returns>
         // GET: api/v1/Images/5/true
         [HttpGet("{imageId}/{_}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ImageDto>> GetImage(int imageId, bool _)
         {
             if (!_repository.IsExist(imageId))
@@ -47,8 +60,15 @@ namespace Oz.Controllers.V1
             return GetImageWithImageSrc(await _repository.GetByIdAsync(imageId));
         }
 
+        /// <summary>
+        /// Returns Product Main Image
+        /// </summary>
+        /// <param name="productId"></param>
+        /// <returns></returns>
         // GET: api/v1/Images/5
         [HttpGet("{productId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ImageDto>> GetImage(int productId)
         {
             if (!_repository.IsMainImageExist(productId))
@@ -58,9 +78,20 @@ namespace Oz.Controllers.V1
             return GetImageWithImageSrc(await _repository.GetMainImageAsync(productId));
         }
 
+        /// <summary>
+        /// Role Administrator Required
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="putImageDto"></param>
+        /// <returns></returns>
         // PUT: api/v1/Images/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+
         public async Task<IActionResult> PutImage(int id, [FromBody] PutImageDto putImageDto)
         {
             if (id != putImageDto.Id)
@@ -83,9 +114,18 @@ namespace Oz.Controllers.V1
             return NoContent();
         }
 
+        /// <summary>
+        /// Role Administrator Required
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="imageFile"></param>
+        /// <returns></returns>
         // POST: api/v1/Images
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ImageDto>> PostImage(IFormCollection data, IFormFile imageFile)
         {
             Image image = new Image();
@@ -98,9 +138,17 @@ namespace Oz.Controllers.V1
             return CreatedAtAction(nameof(GetImage), new { imageId = imageDto.Id, _ = true }, GetImageWithImageSrc(imageDto));
         }
 
+        /// <summary>
+        /// Role Administrator Required
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         // DELETE: api/v1/Images/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteImage(int id)
         {
             if (!_repository.IsExist(id))

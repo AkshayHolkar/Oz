@@ -9,6 +9,8 @@ using Oz.Repositories;
 using Oz.Services;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Text;
 
 namespace Oz.Installers
@@ -38,7 +40,17 @@ namespace Oz.Installers
 
             services.AddSwaggerGen(x =>
             {
-                x.SwaggerDoc("v1", new OpenApiInfo { Title = "Oz API", Version = "v1" });
+                x.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Oz API",
+                    Version = "v1",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Akshay Holkar",
+                        Email = "dhamakk@gmail.com",
+                        Url = new Uri("https://www.linkedin.com/in/akshay-holkar-6b8728139")
+                    }
+                });
 
                 x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
@@ -62,6 +74,10 @@ namespace Oz.Installers
                         new List<string>()
                     }
                 });
+
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                x.IncludeXmlComments(xmlPath);
             });
 
             var jwtSettings = new JwtSettings();

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oz.Domain;
 using Oz.Dtos;
@@ -29,6 +30,8 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Sizes/5
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<Size>> GetSize(int id)
         {
             var size = await _repository.GetByIdAsync(id);
@@ -41,9 +44,19 @@ namespace Oz.Controllers.V1
             return size;
         }
 
+        /// <summary>
+        /// Role Administrator Required
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
         // PUT: api/v1/Sizes/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> PutSizeAsync(int id, [FromBody] Size size)
         {
             if (id != size.Id)
@@ -66,9 +79,17 @@ namespace Oz.Controllers.V1
             return NoContent();
         }
 
+        /// <summary>
+        /// Role Administrator Required
+        /// </summary>
+        /// <param name="postSizeDto"></param>
+        /// <returns></returns>
         // POST: api/v1/Sizes
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<Size>> PostSize([FromBody] PostSizeDto postSizeDto)
         {
             if (!ModelState.IsValid)
@@ -82,9 +103,17 @@ namespace Oz.Controllers.V1
             return CreatedAtAction(nameof(GetSize), new { id = size.Id }, size);
         }
 
+        /// <summary>
+        /// Role Administrator Required
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         // DELETE: api/v1/Sizes/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteSizeAsync(int id)
         {
             if (!_repository.IsExist(id))

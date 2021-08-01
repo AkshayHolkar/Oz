@@ -13,11 +13,14 @@ using Oz.Extensions;
 using Oz.Services;
 using Oz.Dtos;
 using Oz.Repositories;
+using System.Net.Mime;
 
 namespace Oz.Controllers.V1
 {
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/v1/Accounts")]
+    [Produces(MediaTypeNames.Application.Json)]
+    [Consumes(MediaTypeNames.Application.Json)]
     [ApiController]
     public class AccountsController : ControllerBase
     {
@@ -32,16 +35,31 @@ namespace Oz.Controllers.V1
             _sharedService = sharedService;
         }
 
+        /// <summary>
+        /// Returns All Accounts (Role Administrator Required)
+        /// </summary>
+        /// <param name="_"></param>
+        /// <param name="unused"></param>
+        /// <returns></returns>
         //GET: api/v1/Accounts/true
         [Authorize(Roles = "Admin")]
         [HttpGet("{_}/{unused}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<IEnumerable<AccountDto>>> GetAccounts(bool _, bool unused)
         {
             return await _repository.GetAllAsync();
         }
 
+        /// <summary>
+        /// Returns User Account
+        /// </summary>
+        /// <returns></returns>
         // GET: api/v1/Accounts
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<AccountDto>> GetAccount()
         {
             var userId = HttpContext.GetUserId();
@@ -51,9 +69,17 @@ namespace Oz.Controllers.V1
 
         }
 
+        /// <summary>
+        /// Returns Account by Id (Role Administrator Required)
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         // GET: api/v1/Accounts/5
         [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<AccountDto>> GetAccount(string id)
         {
             if (!_repository.IsExist(id))
@@ -64,6 +90,10 @@ namespace Oz.Controllers.V1
 
         // PUT: api/v1/Accounts/5
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> PutAccount(string id, [FromBody] AccountDto accountDto)
         {
             if (id != accountDto.UserId)
@@ -96,6 +126,9 @@ namespace Oz.Controllers.V1
 
         // POST: api/v1/Accounts
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<AccountDto>> PostAccount([FromBody] CreateAccountDto createAccountDto)
         {
             if (_repository.IsExist(HttpContext.GetUserId()))
@@ -118,6 +151,10 @@ namespace Oz.Controllers.V1
 
         // DELETE: api/v1/Accounts/5
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> DeleteAccount(string id)
         {
             if (!_repository.IsExist(id))

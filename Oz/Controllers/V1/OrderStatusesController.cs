@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oz.Domain;
 using Oz.Dtos;
@@ -23,6 +24,8 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/OrderStatuses
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<IEnumerable<OrderStatus>>> GetOrderStatuses()
         {
             return await _repository.GetAllAsync();
@@ -30,6 +33,9 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/OrderStatuses/5
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<OrderStatus>> GetOrderStatus(int id)
         {
             var orderStatus = await _repository.GetByIdAsync(id);
@@ -42,9 +48,19 @@ namespace Oz.Controllers.V1
             return orderStatus;
         }
 
+        /// <summary>
+        /// Role Administrator Required
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="orderStatus"></param>
+        /// <returns></returns>
         // PUT: api/v1/OrderStatuses/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> PutOrderStatus(int id, [FromBody] OrderStatus orderStatus)
         {
             if (id != orderStatus.Id)
@@ -67,9 +83,17 @@ namespace Oz.Controllers.V1
             return NoContent();
         }
 
+        /// <summary>
+        /// Role Administrator Required
+        /// </summary>
+        /// <param name="postOrderStatusDto"></param>
+        /// <returns></returns>
         // POST: api/v1/OrderStatuses
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<OrderStatus>> PostOrderStatus([FromBody] PostOrderStatusDto postOrderStatusDto)
         {
             if (!ModelState.IsValid)
@@ -83,9 +107,17 @@ namespace Oz.Controllers.V1
             return CreatedAtAction(nameof(GetOrderStatus), new { id = orderStatus.Id }, orderStatus);
         }
 
+        /// <summary>
+        /// Role Administrator Required
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         // DELETE: api/v1/OrderStatuses/5
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteOrderStatus(int id)
         {
             if (!_repository.IsExist(id))

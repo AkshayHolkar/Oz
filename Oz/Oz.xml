@@ -1,0 +1,277 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Oz</name>
+    </assembly>
+    <members>
+        <member name="M:Oz.Controllers.V1.AccountsController.GetAccounts(System.Boolean,System.Boolean)">
+            <summary>
+            Returns All Accounts (Role Administrator Required)
+            </summary>
+            <param name="_"></param>
+            <param name="unused"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.AccountsController.GetAccount">
+            <summary>
+            Returns User Account
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.AccountsController.GetAccount(System.String)">
+            <summary>
+            Returns Account by Id (Role Administrator Required)
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.CartsController.GetCarts">
+            <summary>
+            Returns All user carts
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.CategoriesController.PutCategory(System.Int32,Oz.Domain.Category)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <param name="category"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.CategoriesController.PostCategory(Oz.Dtos.PostCategoryDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="postCategoryDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.CategoriesController.DeleteCategory(System.Int32)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ColoursController.GetColours(System.Int32)">
+            <summary>
+            Returns All Colours Or If ProductId Provided Returns All Product Colours
+            </summary>
+            <param name="productId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ColoursController.PutColour(System.Int32,Oz.Dtos.ColourDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <param name="colourDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ColoursController.PostColour(Oz.Dtos.PostColourDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="postColourDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ColoursController.DeleteColour(System.Int32)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ImagesController.GetImages(System.Int32)">
+            <summary>
+            Returns All Images Or If ProductId Provided Returns All Product Images
+            </summary>
+            <param name="productId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ImagesController.GetImage(System.Int32,System.Boolean)">
+            <summary>
+            Returns Image By Id
+            </summary>
+            <param name="imageId"></param>
+            <param name="_"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ImagesController.GetImage(System.Int32)">
+            <summary>
+            Returns Product Main Image
+            </summary>
+            <param name="productId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ImagesController.PutImage(System.Int32,Oz.Dtos.PutImageDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <param name="putImageDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ImagesController.PostImage(Microsoft.AspNetCore.Http.IFormCollection,Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="data"></param>
+            <param name="imageFile"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ImagesController.DeleteImage(System.Int32)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.OrderDetailsController.GetOrderDetails(System.Int32)">
+            <summary>
+            If OrderId Provided Returns All OrderDetails For That OrderId Else Return BadRequest
+            </summary>
+            <param name="orderId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.OrderDetailsController.PutOrderDetail(System.Int32,Oz.Dtos.OrderDetailDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <param name="orderDetailDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.OrderDetailsController.DeleteOrderDetail(System.Int32)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.OrdersController.GetOrders(System.String)">
+            <summary>
+            If Administrator Returns All Orders Else Only User Orders. If Administrator Provide CustomerId Returns All Orders Of That Customer
+            </summary>
+            <param name="customerId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.OrdersController.PutOrder(System.Int32,Oz.Dtos.OrderDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <param name="orderDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.OrdersController.PostOrder(Oz.Dtos.PostOrderDto)">
+            <summary>
+            To Create Own Order User Does Not Need To Provide CustomerId. Only Administrator Can Create Order For Customer by Providing CustomerId
+            </summary>
+            <param name="postOrderDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.OrdersController.DeleteOrder(System.Int32)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.OrderStatusesController.PutOrderStatus(System.Int32,Oz.Domain.OrderStatus)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <param name="orderStatus"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.OrderStatusesController.PostOrderStatus(Oz.Dtos.PostOrderStatusDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="postOrderStatusDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.OrderStatusesController.DeleteOrderStatus(System.Int32)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ProductsController.PutProduct(System.Int32,Oz.Dtos.ProductDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <param name="productDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ProductsController.PostProduct(Oz.Dtos.PostProductDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="postProductDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ProductsController.DeleteProduct(System.Int32)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ProductSizesController.GetProductSizes(System.Int32)">
+            <summary>
+            Returns All ProductSizes Or If ProductId Provided Returns All Available ProductSizes For Product
+            </summary>
+            <param name="productId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ProductSizesController.PutProductSize(System.Int32,Oz.Dtos.ProductSizeDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <param name="productSizeDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ProductSizesController.PostProductSize(Oz.Dtos.PostProductSizeDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="postProductSizeDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.ProductSizesController.DeleteProductSize(System.Int32)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.SizesController.PutSizeAsync(System.Int32,Oz.Domain.Size)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <param name="size"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.SizesController.PostSize(Oz.Dtos.PostSizeDto)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="postSizeDto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Oz.Controllers.V1.SizesController.DeleteSizeAsync(System.Int32)">
+            <summary>
+            Role Administrator Required
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

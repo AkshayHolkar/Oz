@@ -25,8 +25,14 @@ namespace Oz.Controllers.V1
             _sharedService = sharedService;
         }
 
+        /// <summary>
+        /// Returns All user carts
+        /// </summary>
+        /// <returns></returns>
         // GET: api/v1/Carts
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<IEnumerable<CartDto>>> GetCarts()
         {
             var userId = HttpContext.GetUserId();
@@ -35,6 +41,10 @@ namespace Oz.Controllers.V1
 
         // GET: api/v1/Carts/5
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<CartDto>> GetCart(int id)
         {
             if (!_repository.IsExist(id))
@@ -53,6 +63,10 @@ namespace Oz.Controllers.V1
 
         // PUT: api/v1/Carts/5
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PutCart(int id, [FromBody] CartDto cartDto)
         {
 
@@ -83,6 +97,9 @@ namespace Oz.Controllers.V1
 
         // POST: api/v1/Carts
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<CartDto>> PostCart([FromBody] CreateCartDto createCartDto)
         {
             if (!ModelState.IsValid)
@@ -100,6 +117,10 @@ namespace Oz.Controllers.V1
 
         // DELETE: api/v1/Carts/5
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteCart(int id)
         {
             if (!_repository.IsExist(id))
