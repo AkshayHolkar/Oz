@@ -50,6 +50,7 @@ namespace Oz
                 app.UseSwaggerUI(option =>
                 {
                     option.SwaggerEndpoint(swaggerOptions.UIEndpoint, swaggerOptions.Description);
+                    option.DisplayOperationId();
                 });
             }
             else

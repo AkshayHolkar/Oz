@@ -7,6 +7,7 @@ using Oz.Domain;
 using Oz.Options;
 using Oz.Repositories;
 using Oz.Services;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -78,6 +79,11 @@ namespace Oz.Installers
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 x.IncludeXmlComments(xmlPath);
+
+                x.CustomOperationIds(apiDescription =>
+                {
+                    return apiDescription.TryGetMethodInfo(out MethodInfo methodInfo) ? methodInfo.Name : null;
+                });
             });
 
             var jwtSettings = new JwtSettings();
