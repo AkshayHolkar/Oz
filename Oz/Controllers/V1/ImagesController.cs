@@ -126,11 +126,11 @@ namespace Oz.Controllers.V1
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ImageDto>> PostImage(IFormCollection data, IFormFile imageFile)
+        public async Task<ActionResult<ImageDto>> PostImage([FromForm] PostImageDto data, IFormFile imageFile)
         {
             Image image = new Image();
-            image.ProductId = Int32.Parse(data["productId"]);
-            image.Main = bool.Parse(data["main"]);
+            image.ProductId = data.ProductId;
+            image.Main = data.Main;
             image.Name = await SaveImage(imageFile);
 
             var imageDto = await _repository.CreateAsync(image);
