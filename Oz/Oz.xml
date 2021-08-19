@@ -112,7 +112,7 @@
             <param name="putImageDto"></param>
             <returns></returns>
         </member>
-        <member name="M:Oz.Controllers.V1.ImagesController.PostImage(Microsoft.AspNetCore.Http.IFormCollection,Microsoft.AspNetCore.Http.IFormFile)">
+        <member name="M:Oz.Controllers.V1.ImagesController.PostImage(Oz.Dtos.PostImageDto,Microsoft.AspNetCore.Http.IFormFile)">
             <summary>
             Role Administrator Required
             </summary>
