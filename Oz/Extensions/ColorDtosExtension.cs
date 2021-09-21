@@ -31,7 +31,7 @@ namespace Oz.Extensions
             };
         }
 
-        public static Colour AsCartFromPostColourDto(this PostColourDto postColourDto)
+        public static Colour AsColourFromPostColourDto(this PostColourDto postColourDto)
         {
             return new Colour()
             {

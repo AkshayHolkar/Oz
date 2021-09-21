@@ -42,7 +42,7 @@ namespace Oz.Repositories
 
         public async Task<ColourDto> CreateAsync(PostColourDto postColourDto)
         {
-            var colour = postColourDto.AsCartFromPostColourDto();
+            var colour = postColourDto.AsColourFromPostColourDto();
             _context.Colours.Add(colour);
             await _context.SaveChangesAsync();
             return colour.AsDto();
