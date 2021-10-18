@@ -14,5 +14,15 @@ namespace Oz.Extensions
 
             return httpContext.User.Claims.Single(x => x.Type == "id").Value;
         }
+
+        public static bool IsApprovedUser(this HttpContext httpContext)
+        {
+            if (httpContext.User == null)
+            {
+                return false;
+            }
+
+            return httpContext.User.IsInRole("Approved");
+        }
     }
 }
