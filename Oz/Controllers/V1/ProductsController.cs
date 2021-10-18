@@ -2,14 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oz.Data;
-using Oz.Domain;
 using Oz.Dtos;
 using Oz.Extensions;
 using Oz.Repositories;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
@@ -29,7 +25,18 @@ namespace Oz.Controllers.V1
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
-            return await _repository.GetAllAsync();
+            var products = await _repository.GetAllAsync();
+
+            if (HttpContext.IsApprovedUser())
+            {
+                return products;
+            }
+
+            foreach (var product in products)
+            {
+                product.Price = 0;
+            }
+            return products;
         }
 
         // GET: api/v1/Products/5
