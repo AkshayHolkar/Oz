@@ -45,6 +45,12 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
+            if (HttpContext.IsApprovedUser())
+            {
+                return product;
+            }
+
+            product.Price = 0;
             return product;
         }
 
