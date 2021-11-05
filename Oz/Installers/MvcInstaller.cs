@@ -3,9 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Oz.Domain;
 using Oz.Options;
 using Oz.Repositories;
+using Oz.Repositories.Contracts;
 using Oz.Services;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
@@ -27,9 +27,9 @@ namespace Oz.Installers
 
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<ISharedService, SharedService>();
-            services.AddScoped<IDomainsRepository<Size>, SizeRepository>();
-            services.AddScoped<IDomainsRepository<OrderStatus>, OrderStatusRepository>();
-            services.AddScoped<IDomainsRepository<Category>, CategoryRepository>();
+            services.AddScoped<ISizeRepository, SizeRepository>();
+            services.AddScoped<IOrderStatusRepository, OrderStatusRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
