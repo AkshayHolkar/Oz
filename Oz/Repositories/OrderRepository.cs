@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
-using Oz.Dtos;
-using Oz.Extensions;
-using System;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,38 +17,38 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<List<OrderDto>> GetAllAsync()
+        public async Task<List<Order>> GetAllAsync()
         {
-            return await _context.Orders.OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
+            return await _context.Orders.OrderByDescending(j => j.Id).ToListAsync();
         }
 
-        public async Task<List<OrderDto>> GetAllByCustomerAsync(string customerId)
+        public async Task<List<Order>> GetAllByCustomerAsync(string customerId)
         {
-            return await _context.Orders.Where(i => i.CustomerId == customerId).OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
+            return await _context.Orders.Where(i => i.CustomerId == customerId).OrderByDescending(j => j.Id).ToListAsync();
         }
 
-        public async Task<List<OrderDto>> GetAllForCustomerAsync(string userId)
+        public async Task<List<Order>> GetAllForCustomerAsync(string userId)
         {
-            return await _context.Orders.Where(i => i.CustomerId == userId).OrderByDescending(j => j.Id).Select(order => order.AsDto()).ToListAsync();
+            return await _context.Orders.Where(i => i.CustomerId == userId).OrderByDescending(j => j.Id).ToListAsync();
         }
 
-        public async Task<SingleOrderDto> GetByIdAsync(int id)
+        public async Task<Order> GetByIdAsync(int id)
         {
             var order = await _context.Orders.Include(i => i.OrderDetails).FirstOrDefaultAsync(i => i.Id == id);
-            return order.AsSingleOrderDto();
+            return order;
         }
 
-        public async Task UpdateAsync(OrderDto orderDto)
+        public async Task UpdateAsync(Order order)
         {
-            _context.Entry(orderDto.AsOrderFromOrderDto()).State = EntityState.Modified;
+            _context.Entry(order).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
-        public async Task<OrderDto> CreateAsync(Order order)
+        public async Task<Order> CreateAsync(Order order)
         {
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
-            return order.AsDto();
+            return order;
         }
 
         public async Task DeleteAsync(int id)

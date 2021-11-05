@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
 using Oz.Services;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Repositories.Contracts;
 
 namespace Oz.Controllers.V1
 {
@@ -40,16 +39,22 @@ namespace Oz.Controllers.V1
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders([FromQuery] string customerId)
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders([FromQuery] string customerId = null)
         {
             var userId = HttpContext.GetUserId();
             if (await _identityService.IsAdminAsync(userId) && string.IsNullOrEmpty(customerId))
-                return await _repository.GetAllAsync();
+            {
+                var allOrders = await _repository.GetAllAsync();
+                return Ok(allOrders.Select(order => order.AsDto()));
+            }
 
             if (await _identityService.IsAdminAsync(userId) && !string.IsNullOrEmpty(customerId))
-                return await _repository.GetAllByCustomerAsync(customerId);
-
-            return await _repository.GetAllForCustomerAsync(userId);
+            {
+                var allOrdersByCustomerId = await _repository.GetAllByCustomerAsync(customerId);
+                return Ok(allOrdersByCustomerId.Select(order => order.AsDto()));
+            }
+            var allCustomerOrders = await _repository.GetAllForCustomerAsync(userId);
+            return Ok(allCustomerOrders.Select(order => order.AsDto()));
         }
 
         // GET: api/v1/Orders/5
@@ -65,14 +70,14 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            var singleOrderDto = await _repository.GetByIdAsync(id);
+            var singleOrder = await _repository.GetByIdAsync(id);
 
-            if (!_sharedService.UserOwnsDomain(singleOrderDto.CustomerId, HttpContext.GetUserId()))
+            if (!_sharedService.UserOwnsDomain(singleOrder.CustomerId, HttpContext.GetUserId()))
             {
                 return BadRequest(new { error = "You do not own this order" });
             }
 
-            return singleOrderDto;
+            return singleOrder.AsSingleOrderDto();
         }
 
         /// <summary>
@@ -105,7 +110,7 @@ namespace Oz.Controllers.V1
                 return BadRequest(ModelState.ErrorCount);
             }
 
-            await _repository.UpdateAsync(orderDto);
+            await _repository.UpdateAsync(orderDto.AsOrderFromOrderDto());
 
             return NoContent();
         }
