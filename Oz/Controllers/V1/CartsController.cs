@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
 using Oz.Services;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Repositories.Contracts;
+using System.Linq;
 
 namespace Oz.Controllers.V1
 {
@@ -36,7 +37,9 @@ namespace Oz.Controllers.V1
         public async Task<ActionResult<IEnumerable<CartDto>>> GetCarts()
         {
             var userId = HttpContext.GetUserId();
-            return await _repository.GetAllAsync(userId);
+            var carts = await _repository.GetAllAsync(userId);
+
+            return Ok(carts.Select(cart => cart.AsDto()));
         }
 
         // GET: api/v1/Carts/5
@@ -58,7 +61,7 @@ namespace Oz.Controllers.V1
                 return BadRequest(new { error = "You do not own this cart" });
             }
 
-            return cart;
+            return Ok(cart.AsDto());
         }
 
         // PUT: api/v1/Carts/5
@@ -90,7 +93,7 @@ namespace Oz.Controllers.V1
                 return BadRequest(new { error = "You do not own this cart" });
             }
 
-            await _repository.UpdateAsync(cartDto);
+            await _repository.UpdateAsync(cartDto.AsCartFromCartDto());
 
             return NoContent();
         }

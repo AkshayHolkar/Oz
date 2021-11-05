@@ -1,11 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
-using Oz.Dtos;
-using Oz.Extensions;
-using System;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,28 +17,28 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<List<CartDto>> GetAllAsync(string userId)
+        public async Task<List<Cart>> GetAllAsync(string userId)
         {
-            return await _context.Carts.Where(i => i.CustomerId == userId).Select(cart => cart.AsDto()).ToListAsync();
+            return await _context.Carts.Where(i => i.CustomerId == userId).ToListAsync();
         }
 
-        public async Task<CartDto> GetByIdAsync(int id)
+        public async Task<Cart> GetByIdAsync(int id)
         {
             var cart = await _context.Carts.FindAsync(id);
-            return cart.AsDto();
+            return cart;
         }
 
-        public async Task<CartDto> CreateAsync(Cart cart)
+        public async Task<Cart> CreateAsync(Cart cart)
         {
             _context.Carts.Add(cart);
             await _context.SaveChangesAsync();
 
-            return cart.AsDto();
+            return cart;
         }
 
-        public async Task UpdateAsync(CartDto cartDto)
+        public async Task UpdateAsync(Cart cart)
         {
-            _context.Entry(cartDto.AsCartFromCartDto()).State = EntityState.Modified;
+            _context.Entry(cart).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
