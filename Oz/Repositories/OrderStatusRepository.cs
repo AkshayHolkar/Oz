@@ -1,15 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
-using System;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Repositories
 {
-    public class OrderStatusRepository : IDomainsRepository<OrderStatus>
+    public class OrderStatusRepository : IOrderStatusRepository
     {
 
 

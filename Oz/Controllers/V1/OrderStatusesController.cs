@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -15,9 +15,9 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class OrderStatusesController : ControllerBase
     {
-        private readonly IDomainsRepository<OrderStatus> _repository;
+        private readonly IOrderStatusRepository _repository;
 
-        public OrderStatusesController(IDomainsRepository<OrderStatus> repository)
+        public OrderStatusesController(IOrderStatusRepository repository)
         {
             _repository = repository;
         }
@@ -28,7 +28,7 @@ namespace Oz.Controllers.V1
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<IEnumerable<OrderStatus>>> GetOrderStatuses()
         {
-            return await _repository.GetAllAsync();
+            return Ok(await _repository.GetAllAsync());
         }
 
         // GET: api/v1/OrderStatuses/5
@@ -45,7 +45,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            return orderStatus;
+            return Ok(orderStatus);
         }
 
         /// <summary>
