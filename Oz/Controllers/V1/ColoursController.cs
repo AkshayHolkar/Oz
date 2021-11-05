@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Oz.Dtos;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Oz.Repositories;
 using Microsoft.AspNetCore.Http;
+using Oz.Repositories.Contracts;
+using System.Linq;
+using Oz.Extensions;
 
 namespace Oz.Controllers.V1
 {
@@ -30,8 +32,13 @@ namespace Oz.Controllers.V1
         public async Task<ActionResult<IEnumerable<ColourDto>>> GetColours([FromQuery] int productId = 0)
         {
             if (productId != 0)
-                return await _repository.GetAllProductColorsAsync(productId);
-            return await _repository.GetAllAsync();
+            {
+                var colours = await _repository.GetAllProductColoursAsync(productId);
+                return Ok(colours.Select(colour => colour.AsDto()));
+            }
+
+            var allColours = await _repository.GetAllAsync();
+            return Ok(allColours.Select(colour => colour.AsDto()));
         }
 
         // GET: api/v1/Colours/5
@@ -45,7 +52,9 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            return await _repository.GetByIdAsync(id);
+            var colour = await _repository.GetByIdAsync(id);
+
+            return Ok(colour.AsDto());
         }
 
         /// <summary>
@@ -78,7 +87,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            await _repository.UpdateAsync(colourDto);
+            await _repository.UpdateAsync(colourDto.AsColourFromColourDto());
 
             return NoContent();
         }
@@ -101,7 +110,7 @@ namespace Oz.Controllers.V1
                 return BadRequest(ModelState);
             }
 
-            var colourDto = await _repository.CreateAsync(postColourDto);
+            var colourDto = await _repository.CreateAsync(postColourDto.AsColourFromPostColourDto());
 
             return CreatedAtAction(nameof(GetColour), new { id = colourDto.Id }, colourDto);
         }

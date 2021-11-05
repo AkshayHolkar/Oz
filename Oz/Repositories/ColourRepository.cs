@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oz.Data;
-using Oz.Dtos;
-using Oz.Extensions;
+using Oz.Domain;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,34 +17,33 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<List<ColourDto>> GetAllAsync()
+        public async Task<List<Colour>> GetAllAsync()
         {
-            return await _context.Colours.Select(colour => colour.AsDto()).ToListAsync();
+            return await _context.Colours.ToListAsync();
         }
 
-        public async Task<List<ColourDto>> GetAllProductColorsAsync(int productId)
+        public async Task<List<Colour>> GetAllProductColoursAsync(int productId)
         {
-            return await _context.Colours.Where(i => i.ProductId == productId).Select(colour => colour.AsDto()).ToListAsync();
+            return await _context.Colours.Where(i => i.ProductId == productId).ToListAsync();
         }
 
-        public async Task<ColourDto> GetByIdAsync(int id)
+        public async Task<Colour> GetByIdAsync(int id)
         {
             var colour = await _context.Colours.FindAsync(id);
-            return colour.AsDto();
+            return colour;
         }
 
-        public async Task UpdateAsync(ColourDto colourDto)
+        public async Task UpdateAsync(Colour colour)
         {
-            _context.Entry(colourDto.AsColourFromColourDto()).State = EntityState.Modified;
+            _context.Entry(colour).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
-        public async Task<ColourDto> CreateAsync(PostColourDto postColourDto)
+        public async Task<Colour> CreateAsync(Colour colour)
         {
-            var colour = postColourDto.AsColourFromPostColourDto();
             _context.Colours.Add(colour);
             await _context.SaveChangesAsync();
-            return colour.AsDto();
+            return colour;
         }
 
         public async Task DeleteAsync(int id)
