@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oz.Dtos;
 using Oz.Extensions;
-using Oz.Repositories;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
@@ -29,14 +30,14 @@ namespace Oz.Controllers.V1
 
             if (HttpContext.IsApprovedUser())
             {
-                return products;
+                return Ok(products.Select(account => account.AsDto()));
             }
 
             foreach (var product in products)
             {
                 product.Price = 0;
             }
-            return products;
+            return Ok(products.Select(account => account.AsDto()));
         }
 
         // GET: api/v1/Products/5
@@ -54,11 +55,11 @@ namespace Oz.Controllers.V1
 
             if (HttpContext.IsApprovedUser())
             {
-                return product;
+                return Ok(product.AsDto());
             }
 
             product.Price = 0;
-            return product;
+            return Ok(product.AsDto());
         }
 
         /// <summary>
@@ -91,7 +92,7 @@ namespace Oz.Controllers.V1
                 return BadRequest(ModelState.ErrorCount);
             }
 
-            await _repository.UpdateAsync(productDto);
+            await _repository.UpdateAsync(productDto.AsProductFromProductDto());
 
             return NoContent();
         }
@@ -114,7 +115,7 @@ namespace Oz.Controllers.V1
                 return BadRequest(ModelState.ErrorCount);
             }
 
-            var product = await _repository.CreateAsync(postProductDto);
+            var product = await _repository.CreateAsync(postProductDto.AsProductFromPostProductDto());
 
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }

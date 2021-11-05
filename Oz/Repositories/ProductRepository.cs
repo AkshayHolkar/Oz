@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oz.Data;
-using Oz.Dtos;
-using Oz.Extensions;
-using System;
+using Oz.Domain;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,31 +17,30 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<List<ProductDto>> GetAllAsync()
+        public async Task<List<Product>> GetAllAsync()
         {
-            return await _context.Products.Select(product => product.AsDto()).ToListAsync();
+            return await _context.Products.ToListAsync();
         }
 
-        public async Task<ProductDto> GetByIdAsync(int id)
+        public async Task<Product> GetByIdAsync(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product == null)
                 return null;
 
-            return product.AsDto();
+            return product;
         }
 
-        public async Task<ProductDto> CreateAsync(PostProductDto postProductDto)
+        public async Task<Product> CreateAsync(Product product)
         {
-            var product = postProductDto.AsProductFromPostProductDto();
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
-            return product.AsDto();
+            return product;
         }
 
-        public async Task UpdateAsync(ProductDto productDto)
+        public async Task UpdateAsync(Product product)
         {
-            _context.Entry(productDto.AsProductFromProductDto()).State = EntityState.Modified;
+            _context.Entry(product).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
