@@ -1,15 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
-using System;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Repositories
 {
-    public class CategoryRepository : IDomainsRepository<Category>
+    public class CategoryRepository : ICategoryRepository
     {
         private readonly DataContext _context;
 

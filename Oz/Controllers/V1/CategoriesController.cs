@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,9 +14,9 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly IDomainsRepository<Category> _repository;
+        private readonly ICategoryRepository _repository;
 
-        public CategoriesController(IDomainsRepository<Category> repository)
+        public CategoriesController(ICategoryRepository repository)
         {
             _repository = repository;
         }
@@ -25,7 +25,7 @@ namespace Oz.Controllers.V1
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
         {
-            return await _repository.GetAllAsync();
+            return Ok(await _repository.GetAllAsync());
         }
 
         // GET: api/v1/Categories/5
@@ -41,7 +41,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            return category;
+            return Ok(category);
         }
 
         /// <summary>
