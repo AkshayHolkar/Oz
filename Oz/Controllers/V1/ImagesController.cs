@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Extensions;
+using Oz.Repositories.Contracts;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,8 +38,14 @@ namespace Oz.Controllers.V1
         public async Task<ActionResult<IEnumerable<ImageDto>>> GetImages([FromQuery] int productId)
         {
             if (productId != 0)
-                return GetAllImagesWithImageSrc(await _repository.GetAllProductImagesAsync(productId));
-            return GetAllImagesWithImageSrc(await _repository.GetAllAsync());
+            {
+                var images = await _repository.GetAllProductImagesAsync(productId);
+
+                return Ok(GetAllImagesWithImageSrc(images.Select(image => image.AsDto())));
+            }
+
+            var allImages = await _repository.GetAllAsync();
+            return Ok(GetAllImagesWithImageSrc(allImages.Select(image => image.AsDto())));
         }
 
         /// <summary>
@@ -57,7 +64,8 @@ namespace Oz.Controllers.V1
             {
                 return NotFound();
             }
-            return GetImageWithImageSrc(await _repository.GetByIdAsync(imageId));
+            var image = await _repository.GetByIdAsync(imageId);
+            return Ok(GetImageWithImageSrc(image.AsDto()));
         }
 
         /// <summary>
@@ -75,7 +83,8 @@ namespace Oz.Controllers.V1
             {
                 return NotFound();
             }
-            return GetImageWithImageSrc(await _repository.GetMainImageAsync(productId));
+            var image = await _repository.GetMainImageAsync(productId);
+            return Ok(GetImageWithImageSrc(image.AsDto()));
         }
 
         /// <summary>
@@ -109,7 +118,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            await _repository.UpdateAsync(putImageDto);
+            await _repository.UpdateAsync(putImageDto.AsImageFromPutImageDto());
 
             return NoContent();
         }
@@ -133,9 +142,9 @@ namespace Oz.Controllers.V1
             image.Main = data.Main;
             image.Name = await SaveImage(imageFile);
 
-            var imageDto = await _repository.CreateAsync(image);
+            image = await _repository.CreateAsync(image);
 
-            return CreatedAtAction(nameof(GetImage), new { imageId = imageDto.Id, _ = true }, GetImageWithImageSrc(imageDto));
+            return CreatedAtAction(nameof(GetImage), new { imageId = image.Id, _ = true }, GetImageWithImageSrc(image.AsDto()));
         }
 
         /// <summary>
@@ -162,7 +171,7 @@ namespace Oz.Controllers.V1
             return NoContent();
         }
 
-        private List<ImageDto> GetAllImagesWithImageSrc(List<ImageDto> imageDtoList)
+        private List<ImageDto> GetAllImagesWithImageSrc(IEnumerable<ImageDto> imageDtoList)
         {
             List<ImageDto> images = new List<ImageDto>();
             foreach (var image in imageDtoList)
