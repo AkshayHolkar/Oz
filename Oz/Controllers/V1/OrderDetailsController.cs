@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Extensions;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
@@ -35,7 +37,8 @@ namespace Oz.Controllers.V1
         {
             if (orderId != 0)
             {
-                return await _repository.GetAllAsync(orderId);
+                var orderDetails = await _repository.GetAllAsync(orderId);
+                return Ok(orderDetails.Select(orderDetail => orderDetail.AsDto()));
             }
 
             return BadRequest();
@@ -53,7 +56,8 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            return await _repository.GetByIdAsync(id);
+            var orderDetail = await _repository.GetByIdAsync(id);
+            return Ok(orderDetail.AsDto());
         }
 
         /// <summary>
@@ -86,7 +90,7 @@ namespace Oz.Controllers.V1
                 return BadRequest(ModelState.ErrorCount);
             }
 
-            await _repository.UpdateAsync(orderDetailDto);
+            await _repository.UpdateAsync(orderDetailDto.AsOrderFromOrderDetailDto());
 
             return NoContent();
         }
@@ -103,7 +107,7 @@ namespace Oz.Controllers.V1
                 return BadRequest(ModelState.ErrorCount);
             }
 
-            var orderDetailDto = await _repository.CreateAsync(postOrderDetailDto);
+            var orderDetailDto = await _repository.CreateAsync(postOrderDetailDto.AsOrderFromPostOrderDetailDto());
 
             return CreatedAtAction(nameof(GetOrderDetail), new { id = orderDetailDto.Id }, orderDetailDto);
         }

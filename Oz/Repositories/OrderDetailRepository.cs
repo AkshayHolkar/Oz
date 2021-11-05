@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oz.Data;
-using Oz.Dtos;
-using Oz.Extensions;
-using System;
+using Oz.Domain;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,28 +17,27 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<List<OrderDetailDto>> GetAllAsync(int orderId)
+        public async Task<List<OrderDetail>> GetAllAsync(int orderId)
         {
-            return await _context.OrderDetails.Where(i => i.OrderId == orderId).Select(orderDetail => orderDetail.AsDto()).ToListAsync();
+            return await _context.OrderDetails.Where(i => i.OrderId == orderId).ToListAsync();
         }
 
-        public async Task<OrderDetailDto> GetByIdAsync(int id)
+        public async Task<OrderDetail> GetByIdAsync(int id)
         {
             var orderDetail = await _context.OrderDetails.FindAsync(id);
-            return orderDetail.AsDto();
+            return orderDetail;
         }
 
-        public async Task<OrderDetailDto> CreateAsync(PostOrderDetailDto postOrderDetailDto)
+        public async Task<OrderDetail> CreateAsync(OrderDetail orderDetail)
         {
-            var orderDetail = postOrderDetailDto.AsOrderFromPostOrderDetailDto();
             _context.OrderDetails.Add(orderDetail);
             await _context.SaveChangesAsync();
-            return orderDetail.AsDto();
+            return orderDetail;
         }
 
-        public async Task UpdateAsync(OrderDetailDto orderDetailDto)
+        public async Task UpdateAsync(OrderDetail orderDetail)
         {
-            _context.Entry(orderDetailDto.AsOrderFromOrderDetailDto()).State = EntityState.Modified;
+            _context.Entry(orderDetail).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
