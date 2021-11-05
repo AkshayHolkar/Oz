@@ -1,13 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oz.Data;
 using Oz.Domain;
-using Oz.Dtos;
-using Oz.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Oz.Repositories.Contracts;
 
 namespace Oz.Repositories
 {
@@ -20,36 +17,35 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<List<AccountDto>> GetAllAsync()
+        public async Task<List<Account>> GetAllAsync()
         {
-            return await _context.Accounts.Select(account => account.AsDto()).ToListAsync();
+            return await _context.Accounts.ToListAsync();
         }
 
-        public async Task<AccountDto> GetIndividualAsync(string userId)
+        public async Task<Account> GetIndividualAsync(string userId)
         {
             var account = await _context.Accounts.FirstOrDefaultAsync(i => i.UserId == userId);
-            return account.AsDto();
-
+            return account;
         }
 
-        public async Task<AccountDto> GetByIdAsync(string id)
+        public async Task<Account> GetByIdAsync(string id)
         {
             var account = await _context.Accounts.FindAsync(id);
-            return account.AsDto();
+            return account;
         }
 
-        public async Task UpdateAsync(AccountDto accountDto)
+        public async Task UpdateAsync(Account account)
         {
-            _context.Entry(accountDto.AsAccountFromAccountDto()).State = EntityState.Modified;
+            _context.Entry(account).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
-        public async Task<AccountDto> CreateAsync(Account account)
+        public async Task<Account> CreateAsync(Account account)
         {
             _context.Accounts.Add(account);
             await _context.SaveChangesAsync();
 
-            return account.AsDto();
+            return account;
 
         }
 

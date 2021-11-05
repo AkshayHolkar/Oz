@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Oz.Data;
-using Oz.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Oz.Extensions;
 using Oz.Services;
 using Oz.Dtos;
-using Oz.Repositories;
 using System.Net.Mime;
+using Oz.Repositories.Contracts;
 
 namespace Oz.Controllers.V1
 {
@@ -48,7 +44,8 @@ namespace Oz.Controllers.V1
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<IEnumerable<AccountDto>>> GetAccounts(bool _, bool unused)
         {
-            return await _repository.GetAllAsync();
+            var accounts = await _repository.GetAllAsync();
+            return Ok(accounts.Select(account => account.AsDto()));
         }
 
         /// <summary>
@@ -65,7 +62,9 @@ namespace Oz.Controllers.V1
             var userId = HttpContext.GetUserId();
             if (!_repository.IsExist(userId))
                 return NotFound();
-            return await _repository.GetIndividualAsync(userId);
+            var account = await _repository.GetIndividualAsync(userId);
+
+            return Ok(account.AsDto());
 
         }
 
@@ -85,7 +84,9 @@ namespace Oz.Controllers.V1
             if (!_repository.IsExist(id))
                 return NotFound();
 
-            return await _repository.GetByIdAsync(id);
+            var account = await _repository.GetByIdAsync(id);
+
+            return Ok(account.AsDto());
         }
 
         // PUT: api/v1/Accounts/5
@@ -119,7 +120,7 @@ namespace Oz.Controllers.V1
                 return BadRequest(new { error = "You do not own this account" });
             }
 
-            await _repository.UpdateAsync(accountDto);
+            await _repository.UpdateAsync(accountDto.AsAccountFromAccountDto());
 
             return NoContent();
         }
