@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,9 +14,9 @@ namespace Oz.Controllers.V1
     [ApiController]
     public class SizesController : ControllerBase
     {
-        private readonly IDomainsRepository<Size> _repository;
+        private readonly ISizeRepository _repository;
 
-        public SizesController(IDomainsRepository<Size> repository)
+        public SizesController(ISizeRepository repository)
         {
             _repository = repository;
         }
@@ -25,7 +25,7 @@ namespace Oz.Controllers.V1
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Size>>> GetSizes()
         {
-            return await _repository.GetAllAsync();
+            return Ok(await _repository.GetAllAsync());
         }
 
         // GET: api/v1/Sizes/5
@@ -41,7 +41,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            return size;
+            return Ok(size);
         }
 
         /// <summary>
@@ -127,4 +127,3 @@ namespace Oz.Controllers.V1
         }
     }
 }
-
