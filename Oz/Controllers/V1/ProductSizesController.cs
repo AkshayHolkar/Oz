@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Extensions;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Oz.Controllers.V1
@@ -30,8 +32,13 @@ namespace Oz.Controllers.V1
         public async Task<ActionResult<IEnumerable<ProductSizeDto>>> GetProductSizes([FromQuery] int productId = 0)
         {
             if (productId != 0)
-                return await _repository.GetAllProductSizesByProductIdAsync(productId);
-            return await _repository.GetAllAsync();
+            {
+                var productSizes = await _repository.GetAllProductSizesByProductIdAsync(productId);
+                return Ok(productSizes.Select(productSize => productSize.AsDto()));
+
+            }
+            var allProductSizes = await _repository.GetAllAsync();
+            return Ok(allProductSizes.Select(productSize => productSize.AsDto()));
         }
 
         // GET: api/v1/ProductSizes/5
@@ -45,7 +52,8 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            return await _repository.GetByIdAsync(id);
+            var productSize = await _repository.GetByIdAsync(id);
+            return Ok(productSize.AsDto());
         }
 
         /// <summary>
@@ -78,7 +86,7 @@ namespace Oz.Controllers.V1
                 return NotFound();
             }
 
-            await _repository.UpdateAsync(productSizeDto);
+            await _repository.UpdateAsync(productSizeDto.AsProductSizeFromProductSizeDto());
 
             return NoContent();
         }
@@ -101,7 +109,7 @@ namespace Oz.Controllers.V1
                 return BadRequest(ModelState);
             }
 
-            var productSizeDto = await _repository.CreateAsync(postProductSizeDto);
+            var productSizeDto = await _repository.CreateAsync(postProductSizeDto.AsProductSizeFromPostProductSizeDto());
 
             return CreatedAtAction(nameof(GetProductSize), new { id = productSizeDto.Id }, productSizeDto);
         }

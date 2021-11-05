@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Oz.Data;
-using Oz.Dtos;
-using Oz.Extensions;
+using Oz.Domain;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,34 +17,33 @@ namespace Oz.Repositories
             _context = context;
         }
 
-        public async Task<List<ProductSizeDto>> GetAllAsync()
+        public async Task<List<ProductSize>> GetAllAsync()
         {
-            return await _context.ProductSizes.Select(product => product.AsDto()).ToListAsync();
+            return await _context.ProductSizes.ToListAsync();
         }
 
-        public async Task<List<ProductSizeDto>> GetAllProductSizesByProductIdAsync(int productId)
+        public async Task<List<ProductSize>> GetAllProductSizesByProductIdAsync(int productId)
         {
-            return await _context.ProductSizes.Where(i => i.ProductId == productId).Select(product => product.AsDto()).ToListAsync();
+            return await _context.ProductSizes.Where(i => i.ProductId == productId).ToListAsync();
         }
 
-        public async Task<ProductSizeDto> GetByIdAsync(int id)
+        public async Task<ProductSize> GetByIdAsync(int id)
         {
             var productSize = await _context.ProductSizes.FindAsync(id);
-            return productSize.AsDto();
+            return productSize;
         }
 
-        public async Task UpdateAsync(ProductSizeDto productSizeDto)
+        public async Task UpdateAsync(ProductSize productSize)
         {
-            _context.Entry(productSizeDto.AsProductSizeFromProductSizeDto()).State = EntityState.Modified;
+            _context.Entry(productSize).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
 
-        public async Task<ProductSizeDto> CreateAsync(PostProductSizeDto postProductSizeDto)
+        public async Task<ProductSize> CreateAsync(ProductSize productSize)
         {
-            var productSize = postProductSizeDto.AsProductSizeFromPostProductSizeDto();
             _context.ProductSizes.Add(productSize);
             await _context.SaveChangesAsync();
-            return productSize.AsDto();
+            return productSize;
         }
 
         public async Task DeleteAsync(int id)
