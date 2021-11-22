@@ -6,12 +6,14 @@ using Moq;
 using Oz.Controllers.V1;
 using Oz.Extensions;
 using Oz.Dtos;
-using Oz.Repositories;
 using Oz.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using System.Security.Claims;
+using Oz.Repositories.Contracts;
+using Oz.Domain;
+using System.Linq;
 
 namespace Oz.UnitTests
 {
@@ -25,15 +27,16 @@ namespace Oz.UnitTests
         {
             //Arrage
             var controller = GetController();
-            var expectedCarts = (List<CartDto>)A.CollectionOfDummy<CartDto>(5);
+            var expectedCarts = (List<Cart>)A.CollectionOfDummy<Cart>(5);
             A.CallTo(() => mockRepository.GetAllAsync(controller.HttpContext.GetUserId()))
                 .Returns(Task.FromResult(expectedCarts));
 
             //Act
             var result = await controller.GetCarts();
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedCarts);
+            okResult.Value.Should().BeEquivalentTo(expectedCarts.Select(cart => cart.AsDto()));
         }
 
         [Fact]
@@ -57,7 +60,7 @@ namespace Oz.UnitTests
         {
             //Arrage
             var controller = GetController();
-            var existingCart = A.Dummy<CartDto>();
+            var existingCart = A.Dummy<Cart>();
             A.CallTo(() => mockRepository.IsExist(It.IsAny<int>()))
                 .Returns(true);
             A.CallTo(() => mockRepository.GetByIdAsync(existingCart.Id))
@@ -77,7 +80,7 @@ namespace Oz.UnitTests
         {
             //Arrage
             var controller = GetController();
-            var expectedCart = A.Dummy<CartDto>();
+            var expectedCart = A.Dummy<Cart>();
             expectedCart.CustomerId = controller.HttpContext.GetUserId();
             A.CallTo(() => mockRepository.IsExist(expectedCart.Id))
                 .Returns(true);
@@ -88,9 +91,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.GetCart(expectedCart.Id);
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedCart);
+            okResult.Value.Should().BeEquivalentTo(expectedCart.AsDto());
         }
 
         [Fact]
@@ -166,17 +170,14 @@ namespace Oz.UnitTests
         {
             //Arrage
             var controller = GetController();
-            var CartToCreate = A.Dummy<CreateCartDto>();
+            var cartToCreate = A.Dummy<CreateCartDto>();
 
             //Act
-            var result = await controller.PostCart(CartToCreate);
+            var result = await controller.PostCart(cartToCreate);
+            var okResult = result.Result as CreatedAtActionResult;
 
             //Assert
-            var createdCart = (result.Result as CreatedAtActionResult).Value as CartDto;
-            result.Result.Should().BeEquivalentTo(
-                createdCart,
-                Options => Options.ComparingByMembers<CreateCartDto>().ExcludingMissingMembers()
-                );
+            okResult.Value.Should().BeEquivalentTo(cartToCreate);
         }
 
         [Fact]
@@ -200,7 +201,7 @@ namespace Oz.UnitTests
         {
             //Arrage
             var controller = GetController();
-            var existingCart = A.Dummy<CartDto>();
+            var existingCart = A.Dummy<Cart>();
             existingCart.CustomerId = controller.HttpContext.GetUserId();
             A.CallTo(() => mockRepository.IsExist(existingCart.Id))
                 .Returns(true);
@@ -221,7 +222,7 @@ namespace Oz.UnitTests
         {
             //Arrage
             var controller = GetController();
-            var existingCart = A.Dummy<CartDto>();
+            var existingCart = A.Dummy<Cart>();
             existingCart.CustomerId = controller.HttpContext.GetUserId();
             A.CallTo(() => mockRepository.IsExist(existingCart.Id))
                 .Returns(true);

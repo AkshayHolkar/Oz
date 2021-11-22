@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Oz.Controllers.V1;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Extensions;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -19,16 +21,17 @@ namespace Oz.UnitTests
         public async Task GetColours_WithOutProductId_ReturnsAllColours()
         {
             //Arrage
-            var expectedColours = (List<ColourDto>)A.CollectionOfDummy<ColourDto>(5);
+            var expectedColours = (List<Colour>)A.CollectionOfDummy<Colour>(5);
             A.CallTo(() => mockRepository.GetAllAsync())
                 .Returns(Task.FromResult(expectedColours));
             var controller = new ColoursController(mockRepository);
 
             //Act
             var result = await controller.GetColours();
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedColours);
+            okResult.Value.Should().BeEquivalentTo(expectedColours.Select(colour => colour.AsDto()));
         }
 
         [Fact]
@@ -36,16 +39,17 @@ namespace Oz.UnitTests
         {
             //Arrage
             int productId = 2;
-            var expectedColours = (List<ColourDto>)A.CollectionOfDummy<ColourDto>(5);
-            A.CallTo(() => mockRepository.GetAllProductColorsAsync(productId))
+            var expectedColours = (List<Colour>)A.CollectionOfDummy<Colour>(5);
+            A.CallTo(() => mockRepository.GetAllProductColoursAsync(productId))
                 .Returns(Task.FromResult(expectedColours));
             var controller = new ColoursController(mockRepository);
 
             //Act
             var result = await controller.GetColours(productId);
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedColours);
+            okResult.Value.Should().BeEquivalentTo(expectedColours.Select(colour => colour.AsDto()));
         }
 
         [Fact]
@@ -68,7 +72,7 @@ namespace Oz.UnitTests
         public async Task GetColour_WithExistingColour_ReturnsExpectedColour()
         {
             //Arrage
-            var expectedColour = A.Dummy<ColourDto>();
+            var expectedColour = A.Dummy<Colour>();
             A.CallTo(() => mockRepository.IsExist(expectedColour.Id))
                 .Returns(true);
             A.CallTo(() => mockRepository.GetByIdAsync(expectedColour.Id)).Returns(Task.FromResult(expectedColour));
@@ -76,9 +80,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.GetColour(expectedColour.Id);
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedColour);
+            okResult.Value.Should().BeEquivalentTo(expectedColour.AsDto());
         }
 
         [Fact]
@@ -139,13 +144,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.PostColour(colourToCreate);
+            var okResult = result.Result as CreatedAtActionResult;
 
             //Assert
-            var createdColour = (result.Result as CreatedAtActionResult).Value as ColourDto;
-            result.Result.Should().BeEquivalentTo(
-                createdColour,
-                Options => Options.ComparingByMembers<PostColourDto>().ExcludingMissingMembers()
-                );
+            okResult.Value.Should().BeEquivalentTo(colourToCreate);
         }
 
         [Fact]

@@ -1,12 +1,15 @@
 ﻿using FakeItEasy;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Moq;
 using Oz.Controllers.V1;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Extensions;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -20,25 +23,26 @@ namespace Oz.UnitTests
         public async Task GetProducts_WithExistingProducts_ReturnsAllProducts()
         {
             //Arrage
-            var expectedProducts = (List<ProductDto>)A.CollectionOfDummy<ProductDto>(5);
+            var expectedProducts = (List<Product>)A.CollectionOfDummy<Product>(5);
             A.CallTo(() => mockRepository.GetAllAsync())
-                .Returns(Task.FromResult(expectedProducts));
-            var controller = new ProductsController(mockRepository);
+                .Returns(expectedProducts);
+            var controller = GetController();
 
             //Act
             var result = await controller.GetProducts();
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedProducts);
+            okResult.Value.Should().BeEquivalentTo(expectedProducts.Select(product => product.AsDto()));
         }
 
         [Fact]
         public async Task GetProduct_WithNotExistingProduct_ReturnsNotFound()
         {
             //Arrage
-            var productId = 2;
+            int productId = 2;
             A.CallTo(() => mockRepository.GetByIdAsync(productId))
-                .Returns(Task.FromResult((ProductDto)null));
+                .Returns(Task.FromResult((Product)null));
             var controller = new ProductsController(mockRepository);
 
             //Act
@@ -52,15 +56,19 @@ namespace Oz.UnitTests
         public async Task GetProduct_WithExistingProduct_ReturnsExpectedProduct()
         {
             //Arrage
-            var expectedProduct = A.Dummy<ProductDto>();
-            A.CallTo(() => mockRepository.GetByIdAsync(It.IsAny<int>())).Returns(Task.FromResult(expectedProduct));
-            var controller = new ProductsController(mockRepository);
+            int productId = 2;
+            var expectedProduct = A.Dummy<Product>();
+            expectedProduct.Id = productId;
+            A.CallTo(() => mockRepository.GetByIdAsync(productId)).Returns(expectedProduct);
+            var controller = GetController();
+
 
             //Act
-            var result = await controller.GetProduct(2);
+            var result = await controller.GetProduct(productId);
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedProduct);
+            okResult.Value.Should().BeEquivalentTo(expectedProduct.AsDto());
         }
 
         [Fact]
@@ -116,18 +124,15 @@ namespace Oz.UnitTests
         public async Task PostProduct_WithProductToCreate_ReturnsCreatedProduct()
         {
             //Arrage
-            var ProductToCreate = A.Dummy<PostProductDto>();
-            var controller = new ProductsController(mockRepository);
+            var productToCreate = A.Dummy<PostProductDto>();
+            var controller = GetController();
 
             //Act
-            var result = await controller.PostProduct(ProductToCreate);
+            var result = await controller.PostProduct(productToCreate);
+            var okResult = result.Result as CreatedAtActionResult;
 
             //Assert
-            var createdProduct = (result.Result as CreatedAtActionResult).Value as ProductDto;
-            result.Result.Should().BeEquivalentTo(
-                createdProduct,
-                Options => Options.ComparingByMembers<PostProductDto>().ExcludingMissingMembers()
-                );
+            okResult.Value.Should().BeEquivalentTo(productToCreate);
         }
 
         [Fact]
@@ -160,6 +165,20 @@ namespace Oz.UnitTests
 
             //Assert
             result.Should().BeOfType<NoContentResult>();
+        }
+
+        private ProductsController GetController()
+        {
+            ClaimsPrincipal user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Role, "Approved")
+            }, "mock"));
+            var controller = new ProductsController(mockRepository);
+            controller.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = user }
+            };
+            return controller;
         }
     }
 }

@@ -6,13 +6,15 @@ using Moq;
 using Oz.Controllers.V1;
 using Oz.Extensions;
 using Oz.Dtos;
-using Oz.Repositories;
 using Oz.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using System.Security.Claims;
+using Oz.Repositories.Contracts;
+using Oz.Domain;
+using System.Linq;
 
 namespace Oz.UnitTests
 {
@@ -27,15 +29,16 @@ namespace Oz.UnitTests
         {
             //Arrage
             var controller = GetController();
-            var expectedAccounts = (List<AccountDto>)A.CollectionOfDummy<AccountDto>(5);
+            var expectedAccounts = (List<Account>)A.CollectionOfDummy<Account>(5);
             A.CallTo(() => mockRepository.GetAllAsync())
                 .Returns(Task.FromResult(expectedAccounts));
 
             //Act
             var result = await controller.GetAccounts(false, false);
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedAccounts);
+            okResult.Value.Should().BeEquivalentTo(expectedAccounts.Select(account => account.AsDto()));
         }
 
         [Fact]
@@ -88,7 +91,8 @@ namespace Oz.UnitTests
         {
             //Arrage
             var controller = GetController();
-            var expectedAccount = A.Dummy<AccountDto>();
+            var expectedAccount = A.Dummy<Account>();
+            expectedAccount.UserId = "1256asda";
             A.CallTo(() => mockRepository.IsExist(expectedAccount.UserId))
                 .Returns(true);
             A.CallTo(() => mockRepository.GetByIdAsync(expectedAccount.UserId))
@@ -96,9 +100,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.GetAccount(expectedAccount.UserId);
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedAccount);
+            okResult.Value.Should().BeEquivalentTo(expectedAccount.AsDto());
         }
 
         [Fact]
@@ -161,13 +166,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.PostAccount(accountToCreate);
+            var okResult = result.Result as CreatedAtActionResult;
 
             //Assert
-            var createdAccount = (result.Result as CreatedAtActionResult).Value as AccountDto;
-            result.Result.Should().BeEquivalentTo(
-                createdAccount,
-                Options => Options.ComparingByMembers<CreateAccountDto>().ExcludingMissingMembers()
-                );
+            okResult.Value.Should().BeEquivalentTo(accountToCreate);
         }
 
         [Fact]
@@ -191,7 +193,7 @@ namespace Oz.UnitTests
         {
             //Arrage
             var controller = GetController();
-            var existingAccount = A.Dummy<AccountDto>();
+            var existingAccount = A.Dummy<Account>();
             existingAccount.UserId = controller.HttpContext.GetUserId();
             A.CallTo(() => mockRepository.IsExist(existingAccount.UserId))
                 .Returns(true);
@@ -212,7 +214,7 @@ namespace Oz.UnitTests
         {
             //Arrage
             var controller = GetController();
-            var existingAccount = A.Dummy<AccountDto>();
+            var existingAccount = A.Dummy<Account>();
             existingAccount.UserId = controller.HttpContext.GetUserId();
             A.CallTo(() => mockRepository.IsExist(existingAccount.UserId))
                 .Returns(true);

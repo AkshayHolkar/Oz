@@ -5,7 +5,7 @@ using Moq;
 using Oz.Controllers.V1;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
@@ -14,7 +14,7 @@ namespace Oz.UnitTests
 {
     public class CategoriesControllerTests
     {
-        private readonly IDomainsRepository<Category> mockRepository = A.Fake<IDomainsRepository<Category>>();
+        private readonly ICategoryRepository mockRepository = A.Fake<ICategoryRepository>();
 
         [Fact]
         public async Task GetCategories_WithExistingCategories_ReturnsAllCategories()
@@ -22,14 +22,15 @@ namespace Oz.UnitTests
             //Arrage
             var expectedCategories = (List<Category>)A.CollectionOfDummy<Category>(5);
             A.CallTo(() => mockRepository.GetAllAsync())
-                .Returns(Task.FromResult(expectedCategories));
+                .Returns(expectedCategories);
             var controller = new CategoriesController(mockRepository);
 
             //Act
             var result = await controller.GetCategories();
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedCategories);
+            okResult.Value.Should().BeEquivalentTo(expectedCategories);
         }
 
         [Fact]
@@ -57,9 +58,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.GetCategory(It.IsAny<int>());
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedCategory);
+            okResult.Value.Should().BeEquivalentTo(expectedCategory);
         }
 
         [Fact]

@@ -5,8 +5,7 @@ using Moq;
 using Oz.Controllers.V1;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
-using System;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
@@ -15,7 +14,7 @@ namespace Oz.UnitTests
 {
     public class SizeControllerTests
     {
-        private readonly IDomainsRepository<Size> mockRepository = A.Fake<IDomainsRepository<Size>>();
+        private readonly ISizeRepository mockRepository = A.Fake<ISizeRepository>();
 
         [Fact]
         public async Task GetSizes_WithExistingSizes_ReturnsAllSizes()
@@ -28,9 +27,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.GetSizes();
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedSizes);
+            okResult.Value.Should().BeEquivalentTo(expectedSizes);
         }
 
         [Fact]
@@ -58,9 +58,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.GetSize(It.IsAny<int>());
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedSize);
+            okResult.Value.Should().BeEquivalentTo(expectedSize);
         }
 
         [Fact]

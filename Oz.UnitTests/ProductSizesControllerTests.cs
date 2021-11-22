@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Oz.Controllers.V1;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Extensions;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -19,16 +21,17 @@ namespace Oz.UnitTests
         public async Task GetProductSizes_WithOutProductId_ReturnsAllProductSizes()
         {
             //Arrage
-            var expectedProductSizes = (List<ProductSizeDto>)A.CollectionOfDummy<ProductSizeDto>(5);
+            var expectedProductSizes = (List<ProductSize>)A.CollectionOfDummy<ProductSize>(5);
             A.CallTo(() => mockRepository.GetAllAsync())
                 .Returns(Task.FromResult(expectedProductSizes));
             var controller = new ProductSizesController(mockRepository);
 
             //Act
             var result = await controller.GetProductSizes();
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedProductSizes);
+            okResult.Value.Should().BeEquivalentTo(expectedProductSizes.Select(productSize => productSize.AsDto()));
         }
 
         [Fact]
@@ -36,16 +39,17 @@ namespace Oz.UnitTests
         {
             //Arrage
             int productId = 2;
-            var expectedProductSizes = (List<ProductSizeDto>)A.CollectionOfDummy<ProductSizeDto>(5);
+            var expectedProductSizes = (List<ProductSize>)A.CollectionOfDummy<ProductSize>(5);
             A.CallTo(() => mockRepository.GetAllProductSizesByProductIdAsync(productId))
                 .Returns(Task.FromResult(expectedProductSizes));
             var controller = new ProductSizesController(mockRepository);
 
             //Act
             var result = await controller.GetProductSizes(productId);
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedProductSizes);
+            okResult.Value.Should().BeEquivalentTo(expectedProductSizes.Select(productSize => productSize.AsDto()));
         }
 
         [Fact]
@@ -68,7 +72,7 @@ namespace Oz.UnitTests
         public async Task GetProductSize_WithExistingProductSize_ReturnsExpectedProductSize()
         {
             //Arrage
-            var expectedProductSize = A.Dummy<ProductSizeDto>();
+            var expectedProductSize = A.Dummy<ProductSize>();
             A.CallTo(() => mockRepository.IsExist(expectedProductSize.Id))
                 .Returns(true);
             A.CallTo(() => mockRepository.GetByIdAsync(expectedProductSize.Id))
@@ -77,9 +81,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.GetProductSize(expectedProductSize.Id);
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedProductSize);
+            okResult.Value.Should().BeEquivalentTo(expectedProductSize.AsDto());
         }
 
         [Fact]
@@ -140,13 +145,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.PostProductSize(ProductSizeToCreate);
+            var okResult = result.Result as CreatedAtActionResult;
 
             //Assert
-            var createdProductSize = (result.Result as CreatedAtActionResult).Value as ProductSizeDto;
-            result.Result.Should().BeEquivalentTo(
-                createdProductSize,
-                Options => Options.ComparingByMembers<PostProductSizeDto>().ExcludingMissingMembers()
-                );
+            okResult.Value.Should().BeEquivalentTo(ProductSizeToCreate);
         }
 
         [Fact]

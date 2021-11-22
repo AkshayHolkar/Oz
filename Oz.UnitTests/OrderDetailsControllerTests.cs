@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Oz.Controllers.V1;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Extensions;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -16,7 +18,7 @@ namespace Oz.UnitTests
         private readonly IOrderDetailRepository mockRepository = A.Fake<IOrderDetailRepository>();
 
         [Fact]
-        public async Task GetOrderDetails_WithOutOrderId_ReturnsAllOrderDetails()
+        public async Task GetOrderDetails_WithOutOrderId_ReturnsBadRequest()
         {
             //Arrage            
             var controller = new OrderDetailsController(mockRepository);
@@ -25,7 +27,7 @@ namespace Oz.UnitTests
             var result = await controller.GetOrderDetails();
 
             //Assert
-            result.Result.Should().BeOfType<NotFoundResult>();
+            result.Result.Should().BeOfType<BadRequestResult>();
         }
 
         [Fact]
@@ -33,16 +35,17 @@ namespace Oz.UnitTests
         {
             //Arrage
             int orderId = 2;
-            var expectedOrderDetails = (List<OrderDetailDto>)A.CollectionOfDummy<OrderDetailDto>(5);
+            var expectedOrderDetails = (List<OrderDetail>)A.CollectionOfDummy<OrderDetail>(5);
             A.CallTo(() => mockRepository.GetAllAsync(orderId))
                 .Returns(Task.FromResult(expectedOrderDetails));
             var controller = new OrderDetailsController(mockRepository);
 
             //Act
             var result = await controller.GetOrderDetails(orderId);
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedOrderDetails);
+            okResult.Value.Should().BeEquivalentTo(expectedOrderDetails.Select(orderDetail => orderDetail.AsDto()));
         }
 
         [Fact]
@@ -65,7 +68,7 @@ namespace Oz.UnitTests
         public async Task GetOrderDetail_WithExistingOrderDetail_ReturnsExpectedOrderDetail()
         {
             //Arrage
-            var expectedOrderDetail = A.Dummy<OrderDetailDto>();
+            var expectedOrderDetail = A.Dummy<OrderDetail>();
             A.CallTo(() => mockRepository.IsExist(expectedOrderDetail.Id))
                 .Returns(true);
             A.CallTo(() => mockRepository.GetByIdAsync(expectedOrderDetail.Id)).Returns(Task.FromResult(expectedOrderDetail));
@@ -73,9 +76,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.GetOrderDetail(expectedOrderDetail.Id);
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedOrderDetail);
+            okResult.Value.Should().BeEquivalentTo(expectedOrderDetail.AsDto());
         }
 
         [Fact]
@@ -131,18 +135,16 @@ namespace Oz.UnitTests
         public async Task PostOrderDetail_WithOrderDetailToCreate_ReturnsCreatedOrderDetail()
         {
             //Arrage
-            var OrderDetailToCreate = A.Dummy<PostOrderDetailDto>();
+            var orderDetailToCreate = A.Dummy<PostOrderDetailDto>();
             var controller = new OrderDetailsController(mockRepository);
 
             //Act
-            var result = await controller.PostOrderDetail(OrderDetailToCreate);
+            var result = await controller.PostOrderDetail(orderDetailToCreate);
+            var okResult = result.Result as CreatedAtActionResult;
 
             //Assert
-            var createdOrderDetail = (result.Result as CreatedAtActionResult).Value as OrderDetailDto;
-            result.Result.Should().BeEquivalentTo(
-                createdOrderDetail,
-                Options => Options.ComparingByMembers<PostOrderDetailDto>().ExcludingMissingMembers()
-                );
+            okResult.Value.Should().BeEquivalentTo(orderDetailToCreate);
+
         }
 
         [Fact]

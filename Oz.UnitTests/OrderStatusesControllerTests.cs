@@ -5,7 +5,7 @@ using Moq;
 using Oz.Controllers.V1;
 using Oz.Domain;
 using Oz.Dtos;
-using Oz.Repositories;
+using Oz.Repositories.Contracts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
@@ -14,7 +14,7 @@ namespace Oz.UnitTests
 {
     public class OrderStatusesControllerTests
     {
-        private readonly IDomainsRepository<OrderStatus> mockRepository = A.Fake<IDomainsRepository<OrderStatus>>();
+        private readonly IOrderStatusRepository mockRepository = A.Fake<IOrderStatusRepository>();
 
         [Fact]
         public async Task GetOrderStatuses_WithExistingOrderStatuses_ReturnsAllOrderStatuses()
@@ -27,9 +27,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.GetOrderStatuses();
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedOrderStatuses);
+            okResult.Value.Should().BeEquivalentTo(expectedOrderStatuses);
         }
 
         [Fact]
@@ -57,9 +58,10 @@ namespace Oz.UnitTests
 
             //Act
             var result = await controller.GetOrderStatus(It.IsAny<int>());
+            var okResult = result.Result as ObjectResult;
 
             //Assert
-            result.Value.Should().BeEquivalentTo(expectedOrderStatus);
+            okResult.Value.Should().BeEquivalentTo(expectedOrderStatus);
         }
 
         [Fact]
